@@ -1,35 +1,27 @@
 {
-  "name": "OpenShift-Sample-App",
-  "version": "1.0.0",
-  "description": "OpenShift Sample Application",
-  "keywords": [
-    "OpenShift",
-    "Node.js",
-    "application",
-    "openshift"
-  ],
-  "author": {
-    "name": "OpenShift",
-    "email": "ramr@example.org",
-    "url": "http://www.openshift.com/"
+  "name": "impossiblefish",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node server.js"
   },
-  "homepage": "http://www.openshift.com/",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/openshift/origin-server"
-  },
-
-  "engines": {
-    "node": ">= 0.6.0",
-    "npm": ">= 1.0.0"
-  },
-
+  "description": "The OpenShift `nodejs` cartridge documentation can be found at:",
+  "main": "server.js",
   "dependencies": {
-    "express": "~3.4.4"
+    "compression": "^1.1.0",
+    "express": "^4.9.6"
   },
   "devDependencies": {},
-  "bundleDependencies": [],
-
-  "private": true,
-  "main": "server.js"
+  "repository": {
+    "type": "git",
+    "url": "ssh://543680475973ca413800075e@impossiblefish-numical.rhcloud.com/~/git/impossiblefish.git/"
+  },
+  "keywords": [
+    "node.js",
+    "websocket",
+    "html5",
+    "mean",
+    "demo"
+  ],
+  "author": "Mike Evans",
+  "license": "ISC"
 }
