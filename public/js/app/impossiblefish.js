@@ -1,5 +1,12 @@
+// require external libraries
+require.config({
+    paths: {
+        socketio: '../lib/socket.io-1.1.0'
+    }
+});
+
 // wire up models to GUI
-require(["fishtank","util"],function( FishTank, Util ){
+require(["fishtank","socketwrapper","util"],function( FishTank, SocketWrapper, Util ){
 
     var
         // set up GUI container - the fishtank
@@ -9,6 +16,7 @@ require(["fishtank","util"],function( FishTank, Util ){
             width: 150
         },
         fishtank = new FishTank( canvas.getContext("2d"), bounds ),
+        socketWrapper = new SocketWrapper(),
 
         // set up control container
         CONTROL_OPACITY = 0.6,
@@ -20,16 +28,6 @@ require(["fishtank","util"],function( FishTank, Util ){
 
         fadeOut =  function(){
             Util.fadeOut( controls, CONTROL_OPACITY )
-        },
-
-        connectToServer = function(){
-            if ( fishtank.connectToServer() ) {
-                canvas.style.borderStyle = "dashed solid dashed solid";
-                return true;
-            } else {
-                canvas.style.borderStyle = "solid";
-                return false;
-            }
         },
 
         // dynamic sizing of canvas and fish tank
@@ -55,13 +53,13 @@ require(["fishtank","util"],function( FishTank, Util ){
                 case "serverCommand":
                     switch ( event.target.text ) {
                         case "Connect":
-                            if ( fishtank.connectToServer() ) {
+                            if ( socketWrapper.connectToServer() ) {
                                 canvas.style.borderStyle = "dashed solid dashed solid";
                                 event.target.text = "Disconnect";
                             }
                             break;
                         case "Disconnect":
-                            if ( fishtank.disconnectFromServer() ) {
+                            if ( socketWrapper.disconnectFromServer() ) {
                                 canvas.style.borderStyle = "solid";
                                 event.target.text = "Connect";
                             }

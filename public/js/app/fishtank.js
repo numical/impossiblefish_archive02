@@ -11,7 +11,6 @@ define(["fish"],function(Fish){
         var fishies = [],
             animationRequestId,
 
-
             populate = function() {
                 // will add bubbles here!
             },
@@ -52,14 +51,6 @@ define(["fish"],function(Fish){
                 }
             }
         };
-
-        this.connectToServer = function() {
-            return true;
-        }
-
-        this.disconnectFromServer = function() {
-            return true;
-        }
 
         // start-up
         populate();

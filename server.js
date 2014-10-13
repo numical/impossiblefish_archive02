@@ -1,17 +1,17 @@
 new function(){
 
     var
-        DEFAULT_IP_ADDRESS =  "127.0.0.1",
-        DEFAULT_IP_PORT = 8008,
         TERMINATION_SIGNALS = ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'],
         ONE_DAY = 86400000;
 
     var
         express = require( 'express'),
+        expressApp = express(),
+        fileServer = require( 'http').Server( expressApp ),
         compression = require('compression'),
-        app = express(),
-        ipaddress = process.env.OPENSHIFT_NODEJS_IP || DEFAULT_IP_ADDRESS,
-        port = process.env.OPENSHIFT_NODEJS_PORT || DEFAULT_IP_PORT,
+        socketsServer = require( 'socket.io' )( fileServer, { serveClient: false } ),
+        ipAddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1",
+        port = process.env.OPENSHIFT_NODEJS_PORT || 8008,
 
         setupTerminationHandlers = function() {
             process.on('exit', function () {
@@ -34,19 +34,34 @@ new function(){
             console.log('%s: Node server stopped.', Date(Date.now()) );
         },
         
-        setupFileServer = function() {
-            app.use( compression() );
-            app.use( express.static(__dirname + '/public',{ maxAge: ONE_DAY }));          
+        setupExpressServer = function() {
+            expressApp.use( compression() );
+            expressApp.use( express.static(__dirname + '/public',{ maxAge: ONE_DAY }));
+        },
+
+        setupSocketsServer = function(){
+            socketsServer.on( 'connection', function( socket ){
+                console.log('%s: Client socket connected', Date(Date.now()) );
+
+                socket.on( 'reconnect', function(){
+                    console.log('%s: Client socket reconnected', Date(Date.now()) );
+                } );
+
+                socket.on( 'disconnect', function(){
+                    console.log('%s: Client socket disconnected', Date(Date.now()) );
+                } );
+            } );
         },
         
         start = function(){
-            app.listen( port, ipaddress, function(){
-                console.log('%s: Node server started on %s:%d ...', Date(Date.now() ), ipaddress, port);
+            fileServer.listen( port, ipAddress, function(){
+                console.log('%s: Node server started on %s:%d ...', Date(Date.now()), ipAddress, port);
             });
     };
 
     setupTerminationHandlers();
-    setupFileServer();
+    setupExpressServer();
+    setupSocketsServer();
     start();
 
 }();
