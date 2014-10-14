@@ -1,9 +1,11 @@
 // Socket Wrapper  module requires the Util module
-define(["socketio"],function( io ) {
+define(["lib/socket.io-1.1.0", "app/messagefactory"],function( io, MessageFactory ) {
 
     return function(){
 
-        var socket = null;
+        var
+            socket = null,
+            metadata = null;
 
         this.connectToServer = function() {
             try {
@@ -12,6 +14,14 @@ define(["socketio"],function( io ) {
                 } else {
                     socket = io.connect();
                 }
+
+                socket.on ('connect', function(){
+                    socket.emit( MessageFactory.REQUEST_FISHTANK_METADATA, null, function( fishtankMetaData  ){
+                        metadata = fishtankMetaData;
+                        console.log( "Fishtank Id is " + metadata.id );
+                    } );
+                });
+
                 return true;
             }
             catch( ex ) {

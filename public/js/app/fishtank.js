@@ -4,7 +4,7 @@ This script comprises the Fishtank.
 */
 
 // Fishtank module requires the Fish module
-define(["fish"],function(Fish){
+define(["app/fishfactory"],function( FishFactory ){
 
     return function( context, bounds ){
 
@@ -36,7 +36,9 @@ define(["fish"],function(Fish){
         };
 
         this.addFish = function(){
-            fishies.push( new Fish( context, bounds ) );
+            var newFish = FishFactory.createFish( context, bounds );
+            console.log( JSON.stringify( newFish, null, 4 ));
+            fishies.push( newFish );
             if ( fishies.length === 1 ) {
                 animate();
             }

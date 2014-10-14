@@ -5,6 +5,7 @@ new function(){
         ONE_DAY = 86400000;
 
     var
+        requirejs = require( 'requirejs'),
         express = require( 'express'),
         expressApp = express(),
         fileServer = require( 'http').Server( expressApp ),
@@ -12,6 +13,13 @@ new function(){
         socketsServer = require( 'socket.io' )( fileServer, { serveClient: false } ),
         ipAddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1",
         port = process.env.OPENSHIFT_NODEJS_PORT || 8008,
+
+        configureAccessToCommonBrowserCode = function() {
+            requirejs.config({
+                nodeRequire: require,
+                baseUrl: __dirname + '/public/js'
+            });
+        },
 
         setupTerminationHandlers = function() {
             process.on('exit', function () {
@@ -36,10 +44,10 @@ new function(){
         
         setupExpressServer = function() {
             expressApp.use( compression() );
-            expressApp.use( express.static(__dirname + '/public',{ maxAge: ONE_DAY }));
+            expressApp.use( express.static(__dirname + '/public' ,{ maxAge: ONE_DAY }));
         },
 
-        setupSocketsServer = function(){
+        setupSocketsServer = function( MessageFactory ){
             socketsServer.on( 'connection', function( socket ){
                 console.log('%s: Client socket connected', Date(Date.now()) );
 
@@ -50,6 +58,10 @@ new function(){
                 socket.on( 'disconnect', function(){
                     console.log('%s: Client socket disconnected', Date(Date.now()) );
                 } );
+
+                socket.on ( MessageFactory.REQUEST_FISHTANK_METADATA, function( name, callbackOnClient ){
+                    callbackOnClient( MessageFactory.createFishtankMetadata( socket.id ) );
+                } );
             } );
         },
         
@@ -59,9 +71,13 @@ new function(){
             });
     };
 
+    configureAccessToCommonBrowserCode();
     setupTerminationHandlers();
     setupExpressServer();
-    setupSocketsServer();
+    requirejs(["app/messagefactory"],function( MessageFactory ){
+        setupSocketsServer( MessageFactory );
+    } );
+
     start();
 
 }();

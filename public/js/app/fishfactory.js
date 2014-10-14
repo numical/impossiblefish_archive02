@@ -1,10 +1,10 @@
 /*
  ImpossibleFish has 2 core models on the client side -  Fishtank and Fish.
- This script comprises the Fish.
+ This factory creates Fish models.
  */
 
 // Fish module requires the Util module
-define(["util"],function(Util) {
+define(["app/util"],function(Util) {
 
     // constants
     var FISH_DIMENSION = 10,
@@ -79,8 +79,8 @@ define(["util"],function(Util) {
         };
     }
 
-    // the fish object itself
-    return function (context, bounds) {
+    // the main fish object definign behaviour
+    function Fish (context, bounds) {
 
         var xPos = Util.random(0, bounds.width),
             yPos = Util.random(0, bounds.height),
@@ -125,7 +125,19 @@ define(["util"],function(Util) {
             image.hide();
         }
 
+        this.toJSON = function() {
+            return { xRelative: xPos/bounds.width,
+                     yRelative: yPos/bounds.height,
+                     rotation: rotationInRadians };
+        }
+
         image.setPosition( xPos, yPos, rotationInRadians );
+    }
+
+    return {
+        createFish: function(context, bounds){
+            return new Fish( context, bounds );
+        }
     }
 });
 

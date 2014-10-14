@@ -1,12 +1,13 @@
 // require external libraries
 require.config({
     paths: {
-        socketio: '../lib/socket.io-1.1.0'
+        app: 'app',
+        lib: 'lib'
     }
 });
 
 // wire up models to GUI
-require(["fishtank","socketwrapper","util"],function( FishTank, SocketWrapper, Util ){
+require(["app/fishtank","app/socketwrapper","app/util"],function( FishTank, SocketWrapper, Util ){
 
     var
         // set up GUI container - the fishtank
