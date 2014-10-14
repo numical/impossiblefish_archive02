@@ -74,12 +74,11 @@ new function(){
     configureAccessToCommonBrowserCode();
     setupTerminationHandlers();
     setupExpressServer();
+    // now need common code...
     requirejs(["app/messagefactory"],function( MessageFactory ){
         setupSocketsServer( MessageFactory );
+        start();
     } );
-
-    start();
-
 }();
 
 
