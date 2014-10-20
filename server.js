@@ -5,14 +5,15 @@ new function(){
         ONE_DAY = 86400000;
 
     var
-        requirejs = require( 'requirejs'),
-        express = require( 'express'),
-        expressApp = express(),
+        Express = require( 'express'),
+        expressApp = Express(),
         fileServer = require( 'http').Server( expressApp ),
         compression = require('compression'),
         socketsServer = require( 'socket.io' )( fileServer, { serveClient: false } ),
         ipAddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1",
         port = process.env.OPENSHIFT_NODEJS_PORT || 8008,
+        requirejs = require( 'requirejs'),
+        liveFishTanks = null,
 
         configureAccessToCommonBrowserCode = function() {
             requirejs.config({
@@ -44,23 +45,24 @@ new function(){
         
         setupExpressServer = function() {
             expressApp.use( compression() );
-            expressApp.use( express.static(__dirname + '/public' ,{ maxAge: ONE_DAY }));
+            expressApp.use( Express.static(__dirname + '/public' ,{ maxAge: ONE_DAY }));
+        },
+
+        setupFishTanks = function( MessageFactory ) {
+            liveFishTanks = require( './app_modules/livefishtanks' )( MessageFactory );
         },
 
         setupSocketsServer = function( MessageFactory ){
             socketsServer.on( 'connection', function( socket ){
                 console.log('%s: Client socket connected', Date(Date.now()) );
 
-                socket.on( 'reconnect', function(){
-                    console.log('%s: Client socket reconnected', Date(Date.now()) );
-                } );
-
                 socket.on( 'disconnect', function(){
                     console.log('%s: Client socket disconnected', Date(Date.now()) );
+                    liveFishTanks.removeFishTankOnSocket( socket );
                 } );
 
-                socket.on ( MessageFactory.REQUEST_FISHTANK_METADATA, function( name, callbackOnClient ){
-                    callbackOnClient( MessageFactory.createFishtankMetadata( socket.id ) );
+                socket.on ( MessageFactory.REQUEST_FISHTANK_DESCRIPTOR, function( name, callbackOnClient ){
+                    liveFishTanks.addFishTankOnSocket( socket, callbackOnClient );
                 } );
             } );
         },
@@ -74,8 +76,8 @@ new function(){
     configureAccessToCommonBrowserCode();
     setupTerminationHandlers();
     setupExpressServer();
-    // now need common code...
     requirejs(["app/messagefactory"],function( MessageFactory ){
+        setupFishTanks( MessageFactory );
         setupSocketsServer( MessageFactory );
         start();
     } );

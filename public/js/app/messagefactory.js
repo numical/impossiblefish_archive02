@@ -4,9 +4,9 @@
 
 define( function(){
 
-    function FishtankMetadata(id){
+    function FishTankDescriptor(id,x,y){
         this.id = id;
-
+        this.coords = { x: x, y: y };
         // neighbouring fishtanks - recursive use of this function
         this.left = null;
         this.right = null;
@@ -16,10 +16,10 @@ define( function(){
 
     return {
 
-        REQUEST_FISHTANK_METADATA: "requestFishtankMetadata",
+        REQUEST_FISHTANK_DESCRIPTOR: "requestFishTankDescriptor",
 
-        createFishtankMetadata: function( id ) {
-            return new FishtankMetadata( id );
+        createFishTankDescriptor: function( id,x, y ) {
+            return new FishTankDescriptor( id, x, y );
         }
     }
 

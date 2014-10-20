@@ -5,7 +5,14 @@ define(["lib/socket.io-1.1.0", "app/messagefactory"],function( io, MessageFactor
 
         var
             socket = null,
-            metadata = null;
+            fishTankDescriptor = null,
+
+            requestDescriptor = function(){
+                socket.emit( MessageFactory.REQUEST_FISHTANK_DESCRIPTOR, null, function( descriptor  ){
+                    fishTankDescriptor = descriptor;
+                    console.log( "Fishtank Id is " + descriptor.id );
+                } );
+            };
 
         this.connectToServer = function() {
             try {
@@ -15,12 +22,8 @@ define(["lib/socket.io-1.1.0", "app/messagefactory"],function( io, MessageFactor
                     socket = io.connect();
                 }
 
-                socket.on ('connect', function(){
-                    socket.emit( MessageFactory.REQUEST_FISHTANK_METADATA, null, function( fishtankMetaData  ){
-                        metadata = fishtankMetaData;
-                        console.log( "Fishtank Id is " + metadata.id );
-                    } );
-                });
+                socket.on ('connect', requestDescriptor );
+                socket.on ('reconnect', requestDescriptor );
 
                 return true;
             }
