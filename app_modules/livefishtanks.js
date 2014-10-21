@@ -15,13 +15,25 @@ var LEFT = 'left',
  */
 function FishTankMetadata( socket ){
 
-    this.id = socket.id;
+    this.id = socket ? socket.id : null;
     this[LEFT] = null;
     this[RIGHT] = null;
     this[UP] = null;
     this[DOWN] = null;
     this.x = null;
     this.y = null;
+
+    this.clone = function(){
+        var clone = new FishTankMetadata();
+        clone.id = this.id;
+        clone[LEFT] = this[LEFT];
+        clone[RIGHT] = this[RIGHT];
+        clone[UP] = this[UP];
+        clone[DOWN] = this[DOWN];
+        clone.x = this.x;
+        clone.y = this.y;
+        return clone;
+    }
 }
 
 /**
@@ -29,44 +41,50 @@ function FishTankMetadata( socket ){
  */
 function FishTanks(){
 
-    var tankCount = 0,
-        gridSize = 0,
-        allTanks = {},
+    var metadata = {
+            tankCount: 0,
+            gridSize: 0
+        },
         initialTank = null,
+        tanks = {},
 
         addInitialTank = function( newTankMetadata ){
             initialTank = newTankMetadata;
             newTankMetadata.x = 0;
             newTankMetadata.y = 0;
-            allTanks[ newTankMetadata.id ] = newTankMetadata;
+            tanks[ newTankMetadata.id ] = newTankMetadata;
+            metadata.tankCount = 1;
+            metadata.gridSize = 1;
         },
 
         removeInitialTank = function( tankMetadata ){
             initialTank = null;
-            delete allTanks[ tankMetadata.id ];
+            delete tanks[ tankMetadata.id ];
+            metadata.tankCount = 0;
+            metadata.gridSize = 0;
         },
 
-        addAndLinkToNeighbours = function( newTankMetadata ){
+        addAndLinkToNeighbours = function( tankMetadata, isExistingTank ){
             assert( initialTank );
 
+            // find first gap in grid without a tank
             var focus = { x: 0, y: 0, tank: initialTank },
-                linked = false,
+                added = false,
                 stepSize = 0;
-
-            while( !linked ){
+            while( !added ){
                 stepSize++;
                 if( !moveFocus( focus, RIGHT, stepSize ) ){
                     // place to right of focus:
-                    addToGrid( newTankMetadata, focus, RIGHT );
-                    linked = true;
+                    addToGrid( tankMetadata, focus, RIGHT, isExistingTank );
+                    added = true;
                 } else if( !moveFocus( focus, DOWN, stepSize ) ){
                     // place below focus
-                    addToGrid( newTankMetadata, focus, DOWN );
-                    linked = true;
+                    addToGrid( tankMetadata, focus, DOWN, isExistingTank );
+                    added = true;
                 } else if( !moveFocus( focus, LEFT, stepSize ) ){
                     // place to left of focus
-                    addToGrid( newTankMetadata, focus, LEFT );
-                    linked = true;
+                    addToGrid( tankMetadata, focus, LEFT, isExistingTank );
+                    added = true;
                 }
                 else {
                     assert( moveFocus( focus, UP, stepSize ) );
@@ -107,7 +125,7 @@ function FishTanks(){
             return true;
         },
 
-        addToGrid = function( newTankMetadata, focus, direction ){
+        addToGrid = function( newTankMetadata, focus, direction, isExistingTank ){
 
             var oppositeDirection;
 
@@ -184,11 +202,11 @@ function FishTanks(){
                     break;
                 case DOWN:
                     // only do if not a new row
-                    if ( newTankMetadata.y + 1 < gridSize ){
+                    if ( newTankMetadata.y + 1 < metadata.gridSize ){
                         // as we are going clockwise, the tank to the left and down of the focus (if any )
                         // will become the left of the new tank - unless this is a new row
                         var left = focus.tank[LEFT][DOWN];
-                        if( left && ( newTankMetadata.y + 1 < gridSize ) ){
+                        if( left && ( newTankMetadata.y + 1 < metadata.gridSize ) ){
                             newTankMetadata[LEFT] = left;
                             // if left is already connected to a tank to its right, inject new tank
                             if( left[RIGHT] ){
@@ -201,46 +219,185 @@ function FishTanks(){
                     break;
             }
 
-            // add to grid, record if it has expanded
-            allTanks[ newTankMetadata.id ] = newTankMetadata;
-            if ( newTankMetadata.x + 1 > gridSize ) {
-                gridSize = newTankMetadata.x + 1;
-            }
+            if ( !isExistingTank ) {
+                // add to grid
+                tanks[ newTankMetadata.id ] = newTankMetadata;
 
-            console.log( "tank %s added at [%d,%d]", newTankMetadata.id, newTankMetadata.x, newTankMetadata.y );
+                // update metadata
+                metadata.tankCount++;
+                if ( newTankMetadata.x + 1 > metadata.gridSize ) {
+                    metadata.gridSize = newTankMetadata.x + 1;
+                }
+
+                // console.log( "tank %s added at [%d,%d]", newTankMetadata.id, newTankMetadata.x, newTankMetadata.y );
+            }
         },
 
-        removeAndUnlinkFromNeighbours = function( tankMetadata ){
-            if( tankMetadata[LEFT] ) tankMetadata[LEFT][RIGHT] = null;
-            if( tankMetadata[RIGHT] ) tankMetadata[RIGHT][LEFT] = null;
-            if( tankMetadata[UP] ) tankMetadata[UP][DOWN] = null;
-            if( tankMetadata[DOWN] ) tankMetadata[DOWN][UP] = null;
-            delete allTanks[ tankMetadata.id ];
-            console.log( "tank %s removed at [%d,%d]", tankMetadata.id, tankMetadata.x, tankMetadata.y );
+        removeAndRelinkNeighbours = function( tankMetadata ){
+
+            var left = null,
+                up = null;
+
+            // ensure there is always an initial tank
+            if ( tankMetadata === initialTank ){
+                var neighbour = ( tankMetadata[RIGHT] ) ? tankMetadata[RIGHT] : tankMetadata[DOWN];
+                swapTanks( tankMetadata, neighbour );
+                initialTank = neighbour;
+            }
+
+
+
+            // connect left and right neighbours
+            left = tankMetadata[LEFT];
+            if( left  ) {
+                // unless if left and right neighbours are same, then a single tank on row
+                if ( left === tankMetadata[RIGHT] ) {
+                    left[RIGHT] = null;
+                    left[LEFT] = null;
+                    // an orphan and not initial ? re-add to grid
+                    if ( !left[UP] && left !==  initialTank ) {
+                        addAndLinkToNeighbours( left, true );
+                    }
+                    orphan = left[UP] ? null : left;
+                } else {
+                    tankMetadata[RIGHT][LEFT] = left;
+                }
+            }
+
+            // connect up and down neighbours
+            up =  tankMetadata[UP];
+            if( up ) {
+                // unless if up and down neighbours are same, then a single tank on column
+                if ( up === tankMetadata[DOWN ] ) {
+                    up[DOWN] = null;
+                    up[UP] = null;
+                    // an orphan? re-add to grid
+                    if ( !up[LEFT] && up !==  initialTank ) {
+                        addAndLinkToNeighbours( up, true );
+                    }
+                } else {
+                    up[DOWN] = tankMetadata[DOWN];
+                    tankMetadata[DOWN][UP] = up;
+                }
+            }
+
+            // remove tank
+            delete tanks[ tankMetadata.id ];
+
+            // update metadata
+            metadata.tankCount--;
+            if ( metadata.tankCount === 1 ) {
+                metadata.gridSize = 1;
+            } else if( tankMetadata.x === 0 && tankMetadata.y + 1 === metadata.gridSize && !tankMetadata[LEFT] ){
+                // removed last tank in a row
+                metadata.gridSize--
+            }
+
+            // console.log( "tank %s removed at [%d,%d]", tankMetadata.id, tankMetadata.x, tankMetadata.y );
+        },
+
+        swapTanks = function( first, second ){
+
+            var firstClone = first.clone(),
+                secondClone = second.clone();
+
+            if( second[UP] ) second[UP][DOWN] = first;
+            if( second[DOWN]) second[DOWN][UP] = first;
+            if( second[LEFT] ) second[LEFT][RIGHT] = first;
+            if( second[RIGHT] ) second[RIGHT][LEFT] = first;
+
+            if( first[UP] ) first[UP][DOWN] = second;
+            if( first[DOWN]) first[DOWN][UP] = second;
+            if( first[LEFT] ) first[LEFT][RIGHT] = second;
+            if( first[RIGHT] ) first[RIGHT][LEFT] = second;
+
+
+            if ( firstClone[RIGHT] === second ) {
+                first[LEFT] = second;
+                second[RIGHT] = first;
+            } else {
+                second[RIGHT] = firstClone[RIGHT];
+            }
+
+            if ( firstClone[LEFT] === second ) {
+                first[RIGHT] = second;
+                second[LEFT] = first;
+            } else {
+                second[LEFT] = firstClone[LEFT];
+            }
+
+            if ( firstClone[UP] === second ) {
+                first[DOWN] = second;
+                second[UP] = first;
+            } else {
+                second[UP] = firstClone[UP];
+            }
+
+            if ( firstClone[DOWN] === second ) {
+                first[UP] = second;
+                second[DOWN] = first;
+            } else {
+                second[DOWN] = firstClone[DOWN];
+            }
+
+            if ( secondClone[RIGHT] === first ) {
+                second[LEFT] = first;
+                first[RIGHT] = second;
+            } else {
+                first[RIGHT] = secondClone[RIGHT];
+            }
+
+            if ( secondClone[LEFT] === first ) {
+                second[LEFT] = first;
+                first[RIGHT] = second;
+            } else {
+                first[LEFT] = secondClone[LEFT];
+            }
+
+            if ( secondClone[UP] === first ) {
+                second[UP] = first;
+                first[DOWN] = second;
+            } else {
+                first[UP] = secondClone[UP];
+            }
+
+            if ( secondClone[DOWN] === first ) {
+                second[UP] = first;
+                first[DOWN] = second;
+            } else {
+                first[DOWN] = secondClone[DOWN];
+            }
+
+            first.x = secondClone.x;
+            first.y = secondClone.y;
+            second.x = firstClone.x;
+            second.y = firstClone.y;
         };
 
-    this.addFishTank = function( metadata ){
-        if( tankCount === 0 ){
-            addInitialTank( metadata )
+    this.addFishTank = function( tankMetadata ){
+        if( metadata.tankCount === 0 ){
+            addInitialTank( tankMetadata )
         } else{
-            addAndLinkToNeighbours( metadata );
+            addAndLinkToNeighbours( tankMetadata );
         }
-        tankCount++;
     };
 
-    this.removeFishTank = function( metadata ){
-        metadata = allTanks[ metadata.id ];
-        if( tankCount === 1 ){
-            removeInitialTank( metadata );
+    this.removeFishTank = function( tankMetadata ){
+        tankMetadata = tanks[ tankMetadata.id ];
+        if( metadata.tankCount === 1 ){
+            removeInitialTank( tankMetadata );
         } else{
-            removeAndUnlinkFromNeighbours( metadata );
+            removeAndRelinkNeighbours( tankMetadata );
         }
-        tankCount--;
     };
 
     this.getFishTankById = function( id ){
-        return allTanks[ id ];
+        return tanks[ id ];
     };
+
+    this.getMetadata = function() {
+        return metadata;
+    }
 }
 
 /**
@@ -271,7 +428,7 @@ module.exports = function( MessageFactory ){
         };
 
     return {
-        addFishTankOnSocket: function( socket, callback  ){
+        addFishTankWithSocket: function( socket, callback  ){
             var metadata = new FishTankMetadata( socket );
             fishTanks.addFishTank( metadata );
             if ( callback ) {
@@ -279,17 +436,24 @@ module.exports = function( MessageFactory ){
             }
         },
 
-        removeFishTankOnSocket: function( socket ){
+        removeFishTankWithSocket: function( socket, callback ){
             var metadata = new FishTankMetadata( socket );
             fishTanks.removeFishTank( metadata );
+            if ( callback ) {
+                callback();
+            }
         },
 
-        getFishTankDescriptor: function( id ){
+        describeFishTankWithId: function( id ){
             var metadata = fishTanks.getFishTankById( id );
             return metadata ? createDescriptor( metadata, MessageFactory ) : null;
+        },
+
+        describe: function() {
+           return fishTanks.getMetadata();
         }
     };
-}
+};
 
 
 
