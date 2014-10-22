@@ -76,14 +76,6 @@ var expect = require( "expect.js" ),
                     }
                 }
             },
-            expectLinkIsConsistent = function( tank, property, oppositeProperty ){
-                var otherTank = idMap[ tank[property] ];
-                expect ( otherTank[oppositeProperty] ).to.equal( tank.id );
-            },
-            expectTankExists = function( tank, property ){
-                expect( tank[property] ).to.be.ok;
-                expect( idMap ).to.have.property( tank[property] );
-            },
             expectEachTankIsValid = function( indicesToSkip ){
                 for( var i = 0, max = test.tanks.length; i < max; i++ ){
                     if( !( indicesToSkip && indicesToSkip.indexOf( i ) > -1) ){
@@ -98,6 +90,14 @@ var expect = require( "expect.js" ),
                         expectLinkIsConsistent( tank, properties.RIGHT, properties.LEFT );
                     }
                 }
+            },
+            expectLinkIsConsistent = function( tank, property, oppositeProperty ){
+                var otherTank = idMap[ tank[property] ];
+                expect ( otherTank[oppositeProperty] ).to.equal( tank.id );
+            },
+            expectTankExists = function( tank, property ){
+                expect( tank[property] ).to.be.ok;
+                expect( idMap ).to.have.property( tank[property] );
             };
 
         populateIdMap();
@@ -569,7 +569,7 @@ describe( "Sequentially adding first nine fish tanks - testing absolute values",
 
 } );
 
-describe( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
+describe.skip( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
 
     before( function( done ){
         var gridSize = 32;
@@ -1034,6 +1034,76 @@ describe( "Re-adding to a 3x3 grid", function(){
 
     it( "remove eighth and re-add", function(){
         var removedIndex = 7;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it.only( "remove seventh and re-add", function(){
+        var removedIndex = 6;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove sixth and re-add", function(){
+        var removedIndex = 5;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove fifth and re-add", function(){
+        var removedIndex = 4;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove fourth and re-add", function(){
+        var removedIndex = 3;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove third and re-add", function(){
+        var removedIndex = 2;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove second and re-add", function(){
+        var removedIndex = 1;
+        test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
+            test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
+                refreshTestTanks();
+                expectNoBrokenLinks();
+            } );
+        } );
+    } );
+
+    it( "remove first and re-add", function(){
+        var removedIndex = 0;
         test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
             test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
                 refreshTestTanks();

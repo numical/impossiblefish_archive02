@@ -58,11 +58,11 @@ new function(){
 
                 socket.on( 'disconnect', function(){
                     console.log('%s: Client socket disconnected', Date(Date.now()) );
-                    liveFishTanks.removeFishTankOnSocket( socket );
+                    liveFishTanks.removeFishTankWithSocket( socket );
                 } );
 
                 socket.on ( MessageFactory.REQUEST_FISHTANK_DESCRIPTOR, function( name, callbackOnClient ){
-                    liveFishTanks.addFishTankOnSocket( socket, callbackOnClient );
+                    liveFishTanks.addFishTankWithSocket( socket, callbackOnClient );
                 } );
             } );
         },
