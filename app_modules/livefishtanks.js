@@ -87,7 +87,8 @@ function FishTanks(){
                     added = true;
                 }
                 else {
-                    assert( moveFocus( focus, UP, stepSize ) );
+                    var moveUp = moveFocus( focus, UP, stepSize );
+                    assert( moveUp );
                     assert( focus.tank === initialTank );
                 }
             }
@@ -95,31 +96,52 @@ function FishTanks(){
         },
 
         moveFocus = function( focus, direction, stepSize ){
-            var initialTank = focus.tank;
+            var startOfMove = focus.tank;
             while( stepSize ){
-                if( !focus.tank[direction] ){
+                var potentialNewFocusTank = focus.tank[direction];
+                if( !potentialNewFocusTank ){
                     // no neighbour defined
                     return false;
                 }
-                if ( focus.tank[direction] === initialTank ) {
+                if ( potentialNewFocusTank === startOfMove ) {
                     // have looped around column/row
                     return false;
                 }
-                focus.tank = focus.tank[direction];
                 switch( direction ){
                     case LEFT:
-                        focus.x--;
-                        break;
+                        if ( potentialNewFocusTank.x !== focus.x - 1 ) {
+                            // have found hole in grid
+                            return false;
+                        } else {
+                            focus.x--;
+                            break;
+                        }
                     case RIGHT:
-                        focus.x++;
-                        break;
+                        if ( potentialNewFocusTank.x !== focus.x + 1) {
+                            // have found hole in grid
+                            return false;
+                        } else {
+                            focus.x++;
+                            break;
+                        }
                     case UP:
-                        focus.y--;
-                        break;
+                        if ( potentialNewFocusTank.y!== focus.y - 1 ) {
+                            // have found hole in grid
+                            return false;
+                        } else {
+                            focus.y--;
+                            break;
+                        }
                     case DOWN:
-                        focus.y++;
-                        break;
+                        if ( potentialNewFocusTank.y!== focus.y + 1 ) {
+                            // have found hole in grid
+                            return false;
+                        } else {
+                            focus.y++;
+                            break;
+                        }
                 }
+                focus.tank = potentialNewFocusTank;
                 stepSize--;
             }
             return true;
@@ -258,8 +280,8 @@ function FishTanks(){
                     if ( !left[UP] && left !==  initialTank ) {
                         addAndLinkToNeighbours( left, true );
                     }
-                    orphan = left[UP] ? null : left;
                 } else {
+                    left[RIGHT] = tankMetadata[RIGHT];
                     tankMetadata[RIGHT][LEFT] = left;
                 }
             }
@@ -348,8 +370,8 @@ function FishTanks(){
             }
 
             if ( secondClone[LEFT] === first ) {
-                second[LEFT] = first;
-                first[RIGHT] = second;
+                second[RIGHT] = first;
+                first[LEFT] = second;
             } else {
                 first[LEFT] = secondClone[LEFT];
             }
