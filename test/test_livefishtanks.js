@@ -569,7 +569,7 @@ describe( "Sequentially adding first nine fish tanks - testing absolute values",
 
 } );
 
-describe.skip( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
+describe( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
 
     before( function( done ){
         var gridSize = 32;
@@ -1042,7 +1042,7 @@ describe( "Re-adding to a 3x3 grid", function(){
         } );
     } );
 
-    it.only( "remove seventh and re-add", function(){
+    it( "remove seventh and re-add", function(){
         var removedIndex = 6;
         test.server.removeFishTankWithSocket( test.sockets[removedIndex], function(){
             test.server.addFishTankWithSocket( test.sockets[removedIndex], function(){
