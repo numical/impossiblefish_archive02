@@ -52,7 +52,7 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
     var existingNeighbour = initialTank,
         xInsertCoordinate = 0,
         yInsertCoordinate = 0,
-        direction = RIGHT
+        direction = RIGHT,
 
         findFirstNeighourNextToAnEmptyGridPosition = function(){
             var continueToLoop,
@@ -61,13 +61,13 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                 continueToLoop = false;
                 stepSize++;
                 direction = RIGHT;
-                if( changeNeighbour( stepSize ) ){
+                if( moveToAnotherNeighbour( stepSize ) ){
                     direction = DOWN;
-                    if( changeNeighbour( stepSize ) ){
+                    if( moveToAnotherNeighbour( stepSize ) ){
                         direction = LEFT;
-                        if( changeNeighbour( stepSize ) ){
+                        if( moveToAnotherNeighbour( stepSize ) ){
                             direction = UP;
-                            if( changeNeighbour( stepSize ) ){
+                            if( moveToAnotherNeighbour( stepSize ) ){
                                 assert( existingNeighbour === initialTank );
                                 continueToLoop = true;
                             } else{
@@ -79,7 +79,7 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
             } while( continueToLoop );
         },
 
-        changeNeighbour = function( stepSize ){
+        moveToAnotherNeighbour = function( stepSize ){
             var originalNeighbour = existingNeighbour;
             while( stepSize ){
                 var possibleNewNeighbour = existingNeighbour[direction];
@@ -489,6 +489,11 @@ module.exports = function( MessageFactory ){
 
         describe: function(){
             return fishTanks.copyGridMetadata();
+        },
+
+        reset: function() {
+            fishTanks = null;
+            fishTanks = new FishTanks();
         }
     };
 };
