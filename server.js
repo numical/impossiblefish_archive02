@@ -61,7 +61,7 @@ new function(){
                     liveFishTanks.removeFishTankWithSocket( socket );
                 } );
 
-                socket.on ( MessageFactory.REQUEST_FISHTANK_DESCRIPTOR, function( name, callbackOnClient ){
+                socket.on ( MessageFactory.TANK_UPDATE, function( name, callbackOnClient ){
                     liveFishTanks.addFishTankWithSocket( socket, callbackOnClient );
                 } );
             } );

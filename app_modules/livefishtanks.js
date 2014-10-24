@@ -23,31 +23,20 @@ function GridMetadata( original ){
  */
 function FishTankMetadata( socket ){
 
-    this.id = socket ? socket.id : null;
+    this.id = socket.id;
+    this.socket = socket;
     this[LEFT] = null;
     this[RIGHT] = null;
     this[UP] = null;
     this[DOWN] = null;
     this.x = null;
     this.y = null;
-
-    this.clone = function(){
-        var clone = new FishTankMetadata();
-        clone.id = this.id;
-        clone[LEFT] = this[LEFT];
-        clone[RIGHT] = this[RIGHT];
-        clone[UP] = this[UP];
-        clone[DOWN] = this[DOWN];
-        clone.x = this.x;
-        clone.y = this.y;
-        return clone;
-    }
 }
 
 /**
  * Operation to insert a tank into an existing grid
  */
-function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
+function InsertTankOp( tankMetadata, gridMetadata, initialTank, affectedTanks ){
 
     var existingNeighbour = initialTank,
         xInsertCoordinate = 0,
@@ -169,6 +158,9 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                 }
                 last[oppositeDirection] = tankMetadata;
                 tankMetadata[direction] = last;
+                // record affected tanks
+                addToAffectedTanks( existingNeighbour );
+                addToAffectedTanks( last );
 
             } else{
                 // no tanks on the other side of the focus
@@ -177,6 +169,7 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                 tankMetadata[direction] = existingNeighbour;
                 existingNeighbour[oppositeDirection] = tankMetadata;
                 existingNeighbour[direction] = tankMetadata;
+                addToAffectedTanks( existingNeighbour );
             }
 
             // any connections for orthogonal direction?
@@ -190,8 +183,11 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                         // if up is already connected to a tank to its down, inject new tank
                         if( up[DOWN] ){
                             up[DOWN][UP] = tankMetadata;
+                            addToAffectedTanks( up[DOWN] );
                             tankMetadata[DOWN] = up[DOWN];
                             up[DOWN] = tankMetadata;
+                            addToAffectedTanks( up );
+
                         }
                     }
                     break;
@@ -204,13 +200,16 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                         // if above is already connected to a tank below it, inject new tank
                         if( above[DOWN] ){
                             above[DOWN][UP] = tankMetadata;
+                            addToAffectedTanks( above[DOWN] );
                             tankMetadata[DOWN] = above[DOWN];
                             above[DOWN] = tankMetadata;
+                            addToAffectedTanks( above );
                         } else{
                             // only above and new tank are in this column so loop
                             tankMetadata[DOWN] = above;
                             above[DOWN] = tankMetadata;
                             above[UP] = tankMetadata;
+                            addToAffectedTanks( above );
                         }
                     }
                     break;
@@ -224,11 +223,19 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
                         // if left is already connected to a tank to its right, inject new tank
                         if( left[RIGHT] ){
                             left[RIGHT][LEFT] = tankMetadata;
+                            addToAffectedTanks( left[RIGHT] );
                             tankMetadata[RIGHT] = left[RIGHT];
                             left[RIGHT] = tankMetadata;
+                            addToAffectedTanks( left );
                         }
                     }
                     break;
+            }
+        },
+
+        addToAffectedTanks = function( tankMetadata ){
+            if( affectedTanks.indexOf( tankMetadata ) < 0 ){
+                affectedTanks.push( tankMetadata );
             }
         },
 
@@ -243,97 +250,145 @@ function InsertTankOp( tankMetadata, gridMetadata, initialTank ){
 /**
  * Operation to swap a tank with a neighbour
  */
-function SwapTankWithNeighbourOp( tankMetadata ){
+function SwapTankWithNeighbourOp( tankMetadata, affectedTanks ){
 
     var swapTanks = function( first, second ){
 
-        var firstClone = first.clone(),
-            secondClone = second.clone();
+            var initialFirstLeft = first[LEFT],
+                initialFirstRight = first[RIGHT],
+                initialFirstUp = first[UP],
+                initialFirstDown = first[DOWN],
+                initialFirstX = first.x,
+                initialFirstY = first.y,
+                initialSecondLeft = second[LEFT],
+                initialSecondRight = second[RIGHT],
+                initialSecondUp = second[UP],
+                initialSecondDown = second[DOWN],
+                initialSecondX = second.x,
+                initialSecondY = second.y;
 
-        if( second[UP] ) second[UP][DOWN] = first;
-        if( second[DOWN] ) second[DOWN][UP] = first;
-        if( second[LEFT] ) second[LEFT][RIGHT] = first;
-        if( second[RIGHT] ) second[RIGHT][LEFT] = first;
+            if( second[UP] ){
+                second[UP][DOWN] = first;
+                addToAffectedTanks( second[UP] );
+            }
+            if( second[DOWN] ){
+                second[DOWN][UP] = first;
+                addToAffectedTanks( second[DOWN] );
+            }
+            if( second[LEFT] ){
+                second[LEFT][RIGHT] = first;
+                addToAffectedTanks( second[LEFT] );
+            }
+            if( second[RIGHT] ){
+                second[RIGHT][LEFT] = first;
+                addToAffectedTanks( second[RIGHT] );
+            }
 
-        if( first[UP] ) first[UP][DOWN] = second;
-        if( first[DOWN] ) first[DOWN][UP] = second;
-        if( first[LEFT] ) first[LEFT][RIGHT] = second;
-        if( first[RIGHT] ) first[RIGHT][LEFT] = second;
+            if( first[UP] ){
+                first[UP][DOWN] = second;
+                addToAffectedTanks( first[UP] );
+            }
+            if( first[DOWN] ){
+                first[DOWN][UP] = second;
+                addToAffectedTanks( first[DOWN] );
+            }
+            if( first[LEFT] ){
+                first[LEFT][RIGHT] = second;
+                addToAffectedTanks( first[LEFT] );
+            }
+            if( first[RIGHT] ){
+                first[RIGHT][LEFT] = second;
+                addToAffectedTanks( first[RIGHT] );
+            }
 
-        if( firstClone[RIGHT] === second ){
-            first[LEFT] = second;
-            second[RIGHT] = first;
-        } else{
-            second[RIGHT] = firstClone[RIGHT];
-        }
+            if( initialFirstRight === second ){
+                first[LEFT] = second;
+                second[RIGHT] = first;
+            } else{
+                second[RIGHT] = initialFirstRight;
+            }
 
-        if( firstClone[LEFT] === second ){
-            first[RIGHT] = second;
-            second[LEFT] = first;
-        } else{
-            second[LEFT] = firstClone[LEFT];
-        }
+            if( initialFirstLeft === second ){
+                first[RIGHT] = second;
+                second[LEFT] = first;
+            } else{
+                second[LEFT] = initialFirstLeft;
+            }
 
-        if( firstClone[UP] === second ){
-            first[DOWN] = second;
-            second[UP] = first;
-        } else{
-            second[UP] = firstClone[UP];
-        }
+            if( initialFirstUp === second ){
+                first[DOWN] = second;
+                second[UP] = first;
+            } else{
+                second[UP] = initialFirstUp;
+            }
 
-        if( firstClone[DOWN] === second ){
-            first[UP] = second;
-            second[DOWN] = first;
-        } else{
-            second[DOWN] = firstClone[DOWN];
-        }
+            if( initialFirstDown === second ){
+                first[UP] = second;
+                second[DOWN] = first;
+            } else{
+                second[DOWN] = initialFirstDown;
+            }
 
-        if( secondClone[RIGHT] === first ){
-            second[LEFT] = first;
-            first[RIGHT] = second;
-        } else{
-            first[RIGHT] = secondClone[RIGHT];
-        }
+            if( initialSecondRight === first ){
+                second[LEFT] = first;
+                first[RIGHT] = second;
+            } else{
+                first[RIGHT] = initialSecondRight;
+            }
 
-        if( secondClone[LEFT] === first ){
-            second[RIGHT] = first;
-            first[LEFT] = second;
-        } else{
-            first[LEFT] = secondClone[LEFT];
-        }
+            if( initialSecondLeft === first ){
+                second[RIGHT] = first;
+                first[LEFT] = second;
+            } else{
+                first[LEFT] = initialSecondLeft;
+            }
 
-        if( secondClone[UP] === first ){
-            second[UP] = first;
-            first[DOWN] = second;
-        } else{
-            first[UP] = secondClone[UP];
-        }
+            if( initialSecondUp === first ){
+                second[UP] = first;
+                first[DOWN] = second;
+            } else{
+                first[UP] = initialSecondUp;
+            }
 
-        if( secondClone[DOWN] === first ){
-            second[UP] = first;
-            first[DOWN] = second;
-        } else{
-            first[DOWN] = secondClone[DOWN];
-        }
+            if( initialSecondDown === first ){
+                second[UP] = first;
+                first[DOWN] = second;
+            } else{
+                first[DOWN] = initialSecondDown;
+            }
 
-        first.x = secondClone.x;
-        first.y = secondClone.y;
-        second.x = firstClone.x;
-        second.y = firstClone.y;
-    };
+            first.x = initialSecondX;
+            first.y = initialSecondY;
+            second.x = initialFirstX;
+            second.y = initialFirstY;
+        },
+
+        addToAffectedTanks = function( tankMetadata ){
+            if( affectedTanks.indexOf( tankMetadata ) < 0 ){
+                affectedTanks.push( tankMetadata );
+            }
+        };
 
     var neighbour = ( tankMetadata[RIGHT] ) ? tankMetadata[RIGHT] : tankMetadata[DOWN];
     swapTanks( tankMetadata, neighbour );
+    addToAffectedTanks( tankMetadata );
+    addToAffectedTanks( neighbour );
     return neighbour;
 }
 
 /**
  * Operation to extract a tank from an existing grid and 'heal' borken links
  */
-function ExtractTankOp( tankMetadata, gridMetadata, initialTank ){
+function ExtractTankOp( tankMetadata, gridMetadata, initialTank, affectedTanks ){
 
     var left = null,
-        up = null;
+        up = null,
+
+        addToAffectedTanks = function( tankMetadata ){
+            if( affectedTanks.indexOf( tankMetadata ) < 0 ){
+                affectedTanks.push( tankMetadata );
+            }
+        };
 
     // connect left and right neighbours
     left = tankMetadata[LEFT];
@@ -344,11 +399,20 @@ function ExtractTankOp( tankMetadata, gridMetadata, initialTank ){
             left[LEFT] = null;
             // an orphan and not initial ? re-add to grid
             if( !left[UP] && left !== initialTank ){
-                new InsertTankOp( left, gridMetadata, initialTank );
+                new InsertTankOp( left, gridMetadata, initialTank, affectedTanks );
             }
+            addToAffectedTanks( left );
         } else{
             left[RIGHT] = tankMetadata[RIGHT];
             tankMetadata[RIGHT][LEFT] = left;
+            addToAffectedTanks( left );
+            addToAffectedTanks( left[RIGHT] );
+        }
+
+        // if left is connected to self (i.e. now only tank on row) then remove links
+        if( left === left[LEFT] && left === left[RIGHT] ){
+            left[LEFT] = null;
+            left[RIGHT] = null;
         }
     }
 
@@ -361,11 +425,20 @@ function ExtractTankOp( tankMetadata, gridMetadata, initialTank ){
             up[UP] = null;
             // an orphan? re-add to grid
             if( !up[LEFT] && up !== initialTank ){
-                new InsertTankOp( up, gridMetadata, initialTank );
+                new InsertTankOp( up, gridMetadata, initialTank, affectedTanks );
             }
+            addToAffectedTanks( up );
         } else{
             up[DOWN] = tankMetadata[DOWN];
             tankMetadata[DOWN][UP] = up;
+            addToAffectedTanks( up );
+            addToAffectedTanks( up[DOWN] );
+        }
+
+        // if connected to self (i.e. now only tank in column ) then remove links
+        if( up === up[UP] && up === up[DOWN] ){
+            up[UP] = null;
+            up[DOWN] = null;
         }
     }
 }
@@ -387,7 +460,7 @@ function FishTanks(){
             return tankMetadata.x === 0 && ( tankMetadata.y + 1 === gridMetadata.gridSize ) && !tankMetadata[LEFT]
         };
 
-    this.addFishTank = function( tankMetadata ){
+    this.addFishTank = function( tankMetadata, callback ){
         if( gridMetadata.tankCount === 0 ){
             initialTank = tankMetadata;
             tankMetadata.x = 0;
@@ -395,36 +468,52 @@ function FishTanks(){
             tanks[tankMetadata.id] = tankMetadata;
             gridMetadata.tankCount = 1;
             gridMetadata.gridSize = 1;
-
+            if( callback ){
+                callback( [tankMetadata] );
+            }
         } else{
-            new InsertTankOp( tankMetadata, gridMetadata, initialTank );
+            var affectedTanks = [tankMetadata];
+            new InsertTankOp( tankMetadata, gridMetadata, initialTank, affectedTanks );
             tanks[tankMetadata.id] = tankMetadata;
             gridMetadata.tankCount++;
             if( isFirstTankInNewRow( tankMetadata ) ){
                 gridMetadata.gridSize = tankMetadata.x + 1;
             }
+            if( callback ){
+                callback( affectedTanks );
+            }
         }
     };
 
-    this.removeFishTank = function( tankMetadata ){
+    this.removeFishTank = function( tankMetadata, callback ){
         if( gridMetadata.tankCount === 1 ){
             initialTank = null;
             delete tanks[tankMetadata.id];
             gridMetadata.tankCount = 0;
             gridMetadata.gridSize = 0;
-
+            if( callback ){
+                callback( [] );
+            }
         } else{
+            var affectedTanks = [];
             tankMetadata = tanks[tankMetadata.id];
             if( tankMetadata === initialTank ){
-                initialTank = new SwapTankWithNeighbourOp( tankMetadata );
+                initialTank = new SwapTankWithNeighbourOp( tankMetadata, affectedTanks );
             }
-            new ExtractTankOp( tankMetadata, gridMetadata, initialTank );
+            new ExtractTankOp( tankMetadata, gridMetadata, initialTank, affectedTanks );
             delete tanks[tankMetadata.id];
             gridMetadata.tankCount--;
             if( gridMetadata.tankCount === 1 ){
                 gridMetadata.gridSize = 1;
             } else if( isLastTankInRow( tankMetadata ) ){
                 gridMetadata.gridSize--
+            }
+            if( callback ){
+                var index = affectedTanks.indexOf( tankMetadata );
+                if( index > -1 ){
+                    affectedTanks.splice( index, 1 );
+                }
+                callback( affectedTanks );
             }
         }
     };
@@ -451,48 +540,43 @@ function assert( outcome, msg ){
 /**
  * Public API
  */
-module.exports = function( MessageFactory ){
+module.exports = function( Messages ){
 
     var fishTanks = new FishTanks(),
 
-        createTankDescriptor = function( tankMetadata, MessageFactory ){
-            var descriptor = MessageFactory.createFishTankDescriptor(
-                tankMetadata.id, tankMetadata.x, tankMetadata.y );
-            if( tankMetadata[LEFT] ) descriptor.left = tankMetadata[LEFT].id;
-            if( tankMetadata[RIGHT] ) descriptor.right = tankMetadata[RIGHT].id;
-            if( tankMetadata[UP] ) descriptor.top = tankMetadata[UP].id;
-            if( tankMetadata[DOWN] ) descriptor.bottom = tankMetadata[DOWN].id;
-            return descriptor;
+        createTankDescriptor = function( metadata, Messages ){
+            return new Messages.TankDescriptor(
+                metadata.id,
+                metadata.x,
+                metadata.y,
+                ( metadata[LEFT] ) ? metadata[LEFT].id : null,
+                ( metadata[RIGHT] ) ? metadata[RIGHT].id : null,
+                ( metadata[UP] ) ? metadata[UP].id : null,
+                ( metadata[DOWN] ) ? metadata[DOWN].id : null );
         };
 
     return {
-        addFishTankWithSocket: function( socket, callback ){
-            var tankMetadata = new FishTankMetadata( socket );
-            fishTanks.addFishTank( tankMetadata );
-            if( callback ){
-                callback( createTankDescriptor( tankMetadata, MessageFactory ) );
-            }
+        addFishTankWithSocket: function( socket ){
+            fishTanks.addFishTank( new FishTankMetadata( socket ), function( affectedTanks ){
+                affectedTanks.forEach( function( metadata ){
+                    metadata.socket.emit( Messages.TANK_UPDATE, createTankDescriptor( metadata, Messages ) );
+                } );
+            } );
         },
 
-        removeFishTankWithSocket: function( socket, callback ){
-            var tankMetadata = new FishTankMetadata( socket );
-            fishTanks.removeFishTank( tankMetadata );
-            if( callback ){
-                callback();
-            }
-        },
-
-        describeFishTankWithId: function( id ){
-            var tankMetadata = fishTanks.getFishTankById( id );
-            return tankMetadata ? createTankDescriptor( tankMetadata, MessageFactory ) : null;
+        removeFishTankWithSocket: function( socket ){
+            fishTanks.removeFishTank( new FishTankMetadata( socket ), function( affectedTanks ){
+                affectedTanks.forEach( function( metadata ){
+                    metadata.socket.emit( Messages.TANK_UPDATE, createTankDescriptor( metadata, Messages ) );
+                } );
+            } );
         },
 
         describe: function(){
             return fishTanks.copyGridMetadata();
         },
 
-        reset: function() {
-            fishTanks = null;
+        reset: function(){
             fishTanks = new FishTanks();
         }
     };

@@ -1,5 +1,5 @@
 // Socket Wrapper  module requires the Util module
-define(["lib/socket.io-1.1.0", "app/messagefactory"],function( io, MessageFactory ) {
+define(["lib/socket.io-1.1.0", "messages"],function( io, Messages ) {
 
     return function(){
 
@@ -8,7 +8,7 @@ define(["lib/socket.io-1.1.0", "app/messagefactory"],function( io, MessageFactor
             fishTankDescriptor = null,
 
             requestDescriptor = function(){
-                socket.emit( MessageFactory.REQUEST_FISHTANK_DESCRIPTOR, null, function( descriptor  ){
+                socket.emit( Messages.TANK_UPDATE, null, function( descriptor  ){
                     fishTankDescriptor = descriptor;
                     console.log( "Fishtank Id is " + descriptor.id );
                 } );
