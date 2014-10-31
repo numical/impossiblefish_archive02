@@ -26,15 +26,25 @@ module.exports = function( Messages ){
             x: null,
             y: null,
 
-            createDescriptor: function( Messages ){
+            createDescriptor: function( Messages, recurseLevel ){
+                var left,right,up,down;
+                if ( recurseLevel && recurseLevel > 0 ) {
+                    recurseLevel--;
+                    left = ( this[LEFT] ) ? this[LEFT].createDescriptor( Messages, recurseLevel ) : null;
+                    right = ( this[RIGHT] ) ?  this[RIGHT].createDescriptor( Messages, recurseLevel ) : null;
+                    up =  ( this[UP] ) ?  this[UP].createDescriptor( Messages, recurseLevel ) : null;
+                    down = ( this[DOWN] ) ?  this[DOWN].createDescriptor( Messages, recurseLevel ) : null;
+                } else{
+                    left = ( this[LEFT] ) ? this[LEFT].id : null;
+                    right = ( this[RIGHT] ) ? this[RIGHT].id : null;
+                    up = ( this[UP] ) ? this[UP].id : null;
+                    down = ( this[DOWN] ) ? this[DOWN].id : null;
+                }
                 return new Messages.TankDescriptor(
                     this.id,
                     this.x,
                     this.y,
-                    ( this[LEFT] ) ? this[LEFT].id : null,
-                    ( this[RIGHT] ) ? this[RIGHT].id : null,
-                    ( this[UP] ) ? this[UP].id : null,
-                    ( this[DOWN] ) ? this[DOWN].id : null );
+                    left, right, up, down );
             }
         },
 
