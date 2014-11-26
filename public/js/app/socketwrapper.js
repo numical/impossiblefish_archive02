@@ -1,29 +1,20 @@
-// Socket Wrapper  module requires the Util module
-define(["lib/socket.io-1.1.0", "messages"],function( io, Messages ) {
+define(["lib/socket.io-1.1.0", "app/messages"],function( io, Messages ) {
 
-    return function(){
+    return function( commandQueue ){
 
-        var
-            socket = null,
-            fishTankDescriptor = null,
-
-            requestDescriptor = function(){
-                socket.emit( Messages.TANK_UPDATE, null, function( descriptor  ){
-                    fishTankDescriptor = descriptor;
-                    console.log( "Fishtank Id is " + descriptor.id );
-                } );
-            };
+        var socket = null;
 
         this.connectToServer = function() {
             try {
-                if ( socket ) {
-                    socket.connect();
-                } else {
-                    socket = io.connect();
-                }
+                socket = io.connect();
 
-                socket.on ('connect', requestDescriptor );
-                socket.on ('reconnect', requestDescriptor );
+                socket.on( Messages.TANK_UPDATE, function( tankDescriptor ){
+                    commandQueue.updateTank( tankDescriptor );
+                } );
+
+                socket.on( Messages.FISH_TELEPORT, function( fishDescriptor ){
+                    commandQueue.addFish( fishDescriptor );
+                });
 
                 return true;
             }
@@ -33,16 +24,19 @@ define(["lib/socket.io-1.1.0", "messages"],function( io, Messages ) {
             }
         }
 
-        this.disconnectFromServer = function() {
-            try {
-                socket.disconnect();
-                return true;
-            }
-            catch( ex ) {
-                console.log( "Disconnection error: " + ex );
+        this.teleportFish = function( fish ) {
+            if ( socket && socket.connected ) {
+                try {
+                    socket.emit( Messages.FISH_TELEPORT, fish.getDescriptor() );
+                    return true;
+                } catch ( ex ){
+                    console.log( "Teleport error: " + ex );
+                    return false;
+                }
+
+            } else {
                 return false;
             }
         }
-
     };
 });

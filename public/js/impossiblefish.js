@@ -1,4 +1,3 @@
-// require external libraries
 require.config({
     paths: {
         app: 'app',
@@ -7,17 +6,14 @@ require.config({
 });
 
 // wire up models to GUI
-require(["app/fishtank","app/socketwrapper","app/util"],function( FishTank, SocketWrapper, Util ){
+require(["app/commands", "app/fishtank", "app/socketwrapper","app/util"],
+                function( CommandQueue, FishTank, SocketWrapper, Util ){
 
     var
-        // set up GUI container - the fishtank
         canvas = document.getElementById("fishTank"),
-        bounds = {
-            height: 300,
-            width: 150
-        },
-        fishtank = new FishTank( canvas.getContext("2d"), bounds ),
-        socketWrapper = new SocketWrapper(),
+        fishtank = new FishTank( canvas ),
+        socketwrapper = new SocketWrapper( CommandQueue ),
+
 
         // set up control container
         CONTROL_OPACITY = 0.6,
@@ -31,19 +27,11 @@ require(["app/fishtank","app/socketwrapper","app/util"],function( FishTank, Sock
             Util.fadeOut( controls, CONTROL_OPACITY )
         },
 
-        // dynamic sizing of canvas and fish tank
-        layout = function() {
-            bounds.height = canvas.clientHeight;
-            bounds.width =  canvas.clientWidth;
-            canvas.height = bounds.height;
-            canvas.width = bounds.width;
-        },
-
         // event propagation
         eventPropagation = function(event) {
             switch (event.target.id) {
                 case "addFish":
-                    fishtank.addFish();
+                    CommandQueue.addFish();
                     break;
                 case "removeFish":
                     fishtank.removeFish();
@@ -51,30 +39,14 @@ require(["app/fishtank","app/socketwrapper","app/util"],function( FishTank, Sock
                 case "fishTank":
                     fishtank.togglePause();
                     break;
-                case "serverCommand":
-                    switch ( event.target.text ) {
-                        case "Connect":
-                            if ( socketWrapper.connectToServer() ) {
-                                canvas.style.borderStyle = "dashed solid dashed solid";
-                                event.target.text = "Disconnect";
-                            }
-                            break;
-                        case "Disconnect":
-                            if ( socketWrapper.disconnectFromServer() ) {
-                                canvas.style.borderStyle = "solid";
-                                event.target.text = "Connect";
-                            }
-                            break;
-                    }
-                    break;
             }
         };
 
 
     // set up dynamic sizing
-    window.addEventListener('resize', layout, false);
-    window.addEventListener('orientationchange', layout, false);
-    layout();
+    window.addEventListener('resize', fishtank.resize, false);
+    window.addEventListener('orientationchange', fishtank.resize, false);
+    fishtank.resize();
 
     // control visibility
     controls.style.opacity = CONTROL_OPACITY;
@@ -84,6 +56,18 @@ require(["app/fishtank","app/socketwrapper","app/util"],function( FishTank, Sock
     // wire up click event
     window.addEventListener('click', eventPropagation, false );
 
+    // debugging
+    if ( Util.getURLParameter( "debug") ) {
+        document.getElementById( "debugConsole" ).style.display = "block";
+        canvas.style.height = "70vh";
+        controls.style.height
+    }
+
+    // wire up command queue
+    CommandQueue.init( fishtank, socketwrapper, canvas );
+
+    // delay as a gross way of avoiding duplicated refreshes
+    CommandQueue.connectToServer();
 })
 
 

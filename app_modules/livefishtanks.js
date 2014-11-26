@@ -40,11 +40,8 @@ module.exports = function( Messages ){
                     up = ( this[UP] ) ? this[UP].id : null;
                     down = ( this[DOWN] ) ? this[DOWN].id : null;
                 }
-                return new Messages.TankDescriptor(
-                    this.id,
-                    this.x,
-                    this.y,
-                    left, right, up, down );
+                // why not object create? because this is all about setting instance variables
+                return new Messages.TankDescriptor( this.id, { x: this.x, y: this.y }, left, right, up, down );
             }
         },
 
@@ -540,7 +537,7 @@ module.exports = function( Messages ){
             }
         },
 
-        fishTanks = Object.create( FishTanks );
+        fishTanks =  new FishTanks(); //Object.create( FishTanks );
 
     /**
      * Public API
@@ -568,6 +565,29 @@ module.exports = function( Messages ){
                     metadata.socket.emit( Messages.TANK_UPDATE, metadata.createDescriptor( Messages ) );
                 } );
             } );
+        },
+
+        teleportFishFromSocket: function( socket, fishDescriptor ) {
+            var from = fishTanks.getFishTankById( socket.id );
+            var to;
+            if ( fishDescriptor.xRelative === 0 ) {
+                to = from.left;
+                fishDescriptor.xRelative = 1;
+            } else if ( fishDescriptor.xRelative === 1 ) {
+                to = from.right;
+                fishDescriptor.xRelative = 0;
+            } else if ( fishDescriptor.yRelative === 0 ) {
+                to = from.up;
+                fishDescriptor.yRelative = 1;
+            } else if ( fishDescriptor.yRelative === 1 ) {
+                to = from.down;
+                fishDescriptor.yRelative = 0;
+            }
+            if ( to ) {
+                to.socket.emit( Messages.FISH_TELEPORT, fishDescriptor );
+            } else {
+                console.log( "Problem teleporting..." );
+            }
         },
 
         describe: function(){

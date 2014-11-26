@@ -48,21 +48,22 @@ new function(){
             expressApp.use( Express.static(__dirname + '/public' ,{ maxAge: ONE_DAY }));
         },
 
-        setupFishTanks = function( MessageFactory ) {
-            liveFishTanks = require( './app_modules/livefishtanks' )( MessageFactory );
+        setupFishTanks = function( Messages ) {
+            liveFishTanks = require( './app_modules/livefishtanks' )( Messages );
         },
 
-        setupSocketsServer = function( MessageFactory ){
+        setupSocketsServer = function( Messages ){
             socketsServer.on( 'connection', function( socket ){
-                console.log('%s: Client socket connected', Date(Date.now()) );
+                console.log('%s: Client socket connected: %s', Date(Date.now()), socket.id );
+                liveFishTanks.addFishTankWithSocket( socket );
 
                 socket.on( 'disconnect', function(){
-                    console.log('%s: Client socket disconnected', Date(Date.now()) );
+                    console.log('%s: Client socket disconnected: %s', Date(Date.now()), socket.id );
                     liveFishTanks.removeFishTankWithSocket( socket );
                 } );
 
-                socket.on ( MessageFactory.TANK_UPDATE, function( name, callbackOnClient ){
-                    liveFishTanks.addFishTankWithSocket( socket, callbackOnClient );
+                socket.on( Messages.FISH_TELEPORT, function( fishDescriptor ){
+                    liveFishTanks.teleportFishFromSocket( socket, fishDescriptor );
                 } );
             } );
         },
@@ -76,9 +77,9 @@ new function(){
     configureAccessToCommonBrowserCode();
     setupTerminationHandlers();
     setupExpressServer();
-    requirejs(["app/messagefactory"],function( MessageFactory ){
-        setupFishTanks( MessageFactory );
-        setupSocketsServer( MessageFactory );
+    requirejs(["app/messages"],function( Messages ){
+        setupFishTanks( Messages );
+        setupSocketsServer( Messages );
         start();
     } );
 }();

@@ -79,7 +79,7 @@ define(["app/util"],function(Util) {
         };
     }
 
-    // the main fish object definign behaviour
+    // the main fish object defining behaviour
     function Fish (context, bounds) {
 
         var xPos = Util.random(0, bounds.width),

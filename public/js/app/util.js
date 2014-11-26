@@ -1,8 +1,12 @@
 /*
-General purpose utilities module.
+A miscellany of utilities until I decide on a framework to use.
  */
 
+var CASE_INSENSITIVE = "i";
+
 define({
+
+
 
     // random number utility
     random: function( min, max ) {
@@ -15,6 +19,7 @@ define({
         return ( min + Math.floor( (max-min) * Math.random() ) + 0.5 ) | 0 ;
     },
 
+    // GUI fade
     fadeOut: function(element, maxOpacity ) {
         if ( !element.fading ) {
             element.fading = "out";
@@ -32,6 +37,7 @@ define({
         }
     },
 
+    // GUI fade
     fadeIn: function(element, maxOpacity ) {
         if ( !element.fading ) {
             element.fading = "in";
@@ -46,6 +52,12 @@ define({
                 element.style.opacity = op;
             }, 50);
         }
+    },
+
+    // extract URL parameters
+    getURLParameter: function( key ){
+        var value = location.search.match(new RegExp("[\?\&]" + key + "=([^\&]*)(\&?)", CASE_INSENSITIVE));
+        return value ? value[1] : value;
     }
 });
 

@@ -541,7 +541,7 @@ describe( "Testing livefishtanks ...", function(){
 
     } );
 
-    describe.skip( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
+    describe( "Sequentially adding first 1024 fish tanks - no gaps - testing relative values", function(){
 
         before( function( done ){
             var gridSize = 32;
