@@ -74,7 +74,7 @@ define( ["app/util"], function( Util ) {
     }
 
     // the main fish object defining behaviour
-    return function ( CommandQueue, context, fishtank, fishdescriptor ) {
+    return function ( commands, context, fishtank, fishdescriptor, debug ) {
 
         var self = this,
             xPos = fishtank.width * fishdescriptor.xRelative,
@@ -97,7 +97,7 @@ define( ["app/util"], function( Util ) {
                     if (fishtank.left) {
                         self.hide();
                         xPos = 0;
-                        CommandQueue.teleportFish(self);
+                        commands.teleportFish(self);
                     } else {
                         xPos = fishtank.width - 1;
                     }
@@ -105,7 +105,7 @@ define( ["app/util"], function( Util ) {
                     if (fishtank.right) {
                         self.hide();
                         xPos = fishtank.width;
-                        CommandQueue.teleportFish(self);
+                        commands.teleportFish(self);
                     } else {
                         xPos = 0;
                     }
@@ -113,7 +113,7 @@ define( ["app/util"], function( Util ) {
                     if (fishtank.top) {
                         self.hide();
                         yPos = 0;
-                        CommandQueue.teleportFish(self);
+                        commands.teleportFish(self);
                     } else {
                         yPos = fishtank.height - 1;
                     }
@@ -121,7 +121,7 @@ define( ["app/util"], function( Util ) {
                     if (fishtank.bottom) {
                         self.hide();
                         yPos = fishtank.height;
-                        CommandQueue.teleportFish(self);
+                        commands.teleportFish(self);
                     } else {
                         yPos = 1;
                     }
@@ -143,6 +143,9 @@ define( ["app/util"], function( Util ) {
             if ( !hidden ) {
                 hidden = true;
                 image.hide();
+                if ( debug ) {
+                    debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
+                };
             }
         }
 

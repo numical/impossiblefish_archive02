@@ -20,7 +20,8 @@ define( function(){
 
         FISH_TELEPORT: "FISH TELEPORT",
 
-        FishDescriptor: function( xRelative, yRelative, rotation ){
+        FishDescriptor: function( meme, xRelative, yRelative, rotation ){
+            this.meme = meme;
             this.xRelative = xRelative;
             this.yRelative = yRelative;
             this.rotation = rotation

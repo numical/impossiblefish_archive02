@@ -68,19 +68,27 @@ define( ["app/bubble"], function( Bubble ) {
                 animate();
             }
             if ( debug ) {
-                debug.log( "Fish added, total = " + fishies.length );
+                debug.log( "Fish '" + fish.getDescriptor().meme + "' added, total fishies = " + fishies.length );
             }
         };
 
         this.removeFish = function( fish ){
-            var removed = fishies.pop();
+            var removed;
+            if ( fish ) {
+                var index = fishies.indexOf( fish );
+                if ( index > -1 ) {
+                    removed = fishies.splice( index, 1 )[0];
+                }
+            } else {
+                removed = fishies.pop();
+            }
             if ( removed ) {
                 removed.hide();
                 if ( fishies.length === 0 ) {
                     pause();
                 }
                 if ( debug ) {
-                    debug.log( "Fish removed, total = " + fishies.length, true );
+                    debug.logWithStackTrace( "Fish '" + removed.getDescriptor().meme + "' removed, total fishies = " + fishies.length );
                 }
             }
         };

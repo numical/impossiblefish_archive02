@@ -11,9 +11,10 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
 
     var
         canvas = document.getElementById("fishTank"),
-        debug = Util.getURLParameter( "debug" ) ? Debug : null,
+        debug = Util.getURLParameter( "debug" ) ? new Debug() : null,
         fishtank = new FishTank( canvas, debug ),
-        socketwrapper = new SocketWrapper( CommandQueue ),
+        commands = new CommandQueue( fishtank, canvas, debug ),
+        socketwrapper = new SocketWrapper( commands ),
 
         // set up control container
         CONTROL_OPACITY = 0.6,
@@ -31,10 +32,10 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
         eventPropagation = function(event) {
             switch (event.target.id) {
                 case "addFish":
-                    CommandQueue.addFish();
+                    commands.addFish();
                     break;
                 case "removeFish":
-                    fishtank.removeFish();
+                    commands.removeFish();
                     break;
                 case "fishTank":
                     fishtank.togglePause();
@@ -60,13 +61,11 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
     // wire up click event
     window.addEventListener('click', eventPropagation, false );
 
-
-
     // wire up command queue
-    CommandQueue.init( fishtank, socketwrapper, canvas );
+     commands.init( socketwrapper );
 
     // delay as a gross way of avoiding duplicated refreshes
-    CommandQueue.connectToServer();
+    commands.connectToServer();
 })
 
 
