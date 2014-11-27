@@ -6,14 +6,14 @@ require.config({
 });
 
 // wire up models to GUI
-require(["app/commands", "app/fishtank", "app/socketwrapper","app/util"],
-                function( CommandQueue, FishTank, SocketWrapper, Util ){
+require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/util"],
+                function( CommandQueue, FishTank, SocketWrapper, Debug, Util ){
 
     var
         canvas = document.getElementById("fishTank"),
-        fishtank = new FishTank( canvas ),
+        debug = Util.getURLParameter( "debug" ) ? Debug : null,
+        fishtank = new FishTank( canvas, debug ),
         socketwrapper = new SocketWrapper( CommandQueue ),
-
 
         // set up control container
         CONTROL_OPACITY = 0.6,
@@ -42,6 +42,10 @@ require(["app/commands", "app/fishtank", "app/socketwrapper","app/util"],
             }
         };
 
+    // set up debugging
+    if ( debug ) {
+        debug.displayConsole();
+    }
 
     // set up dynamic sizing
     window.addEventListener('resize', fishtank.resize, false);
@@ -56,12 +60,7 @@ require(["app/commands", "app/fishtank", "app/socketwrapper","app/util"],
     // wire up click event
     window.addEventListener('click', eventPropagation, false );
 
-    // debugging
-    if ( Util.getURLParameter( "debug") ) {
-        document.getElementById( "debugConsole" ).style.display = "block";
-        canvas.style.height = "70vh";
-        controls.style.height
-    }
+
 
     // wire up command queue
     CommandQueue.init( fishtank, socketwrapper, canvas );

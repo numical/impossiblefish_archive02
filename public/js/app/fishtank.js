@@ -1,6 +1,6 @@
 define( ["app/bubble"], function( Bubble ) {
 
-    return function( canvas ){
+    return function( canvas, debug ){
 
         var CONNECTED_BORDER = "dashed ",
             DISCONNECTED_BORDER = "solid ",
@@ -67,6 +67,9 @@ define( ["app/bubble"], function( Bubble ) {
             if ( fishies.length === 1 ) {
                 animate();
             }
+            if ( debug ) {
+                debug.log( "Fish added, total = " + fishies.length );
+            }
         };
 
         this.removeFish = function( fish ){
@@ -75,6 +78,9 @@ define( ["app/bubble"], function( Bubble ) {
                 removed.hide();
                 if ( fishies.length === 0 ) {
                     pause();
+                }
+                if ( debug ) {
+                    debug.log( "Fish removed, total = " + fishies.length, true );
                 }
             }
         };
