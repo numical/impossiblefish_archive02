@@ -1,5 +1,5 @@
-define(["lib/stacktrace","app/util"], function( StackTrace, Util ){
-
+define(["lib/stacktrace"], function( generateStackTrace ){
+    'use strict';
     return function(){
 
         var NEW_LINE = "\n",
@@ -24,7 +24,7 @@ define(["lib/stacktrace","app/util"], function( StackTrace, Util ){
         this.logWithStackTrace = function( message ){
             message += NEW_LINE;
             var ignoreLines = 4;
-            StackTrace().forEach( function( line ){
+            generateStackTrace().forEach( function( line ){
                 if( --ignoreLines < 0 ){
                     message += line;
                     message += NEW_LINE;
@@ -32,6 +32,6 @@ define(["lib/stacktrace","app/util"], function( StackTrace, Util ){
             } );
             self.log( message );
         };
-    }
+    };
 });
 

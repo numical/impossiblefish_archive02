@@ -1,37 +1,25 @@
 new function(){
-
+    'use strict';
     var
         TERMINATION_SIGNALS = ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'],
-        ONE_DAY = 86400000;
+        ONE_DAY = 86400000,
 
-    var
-        Express = require( 'express'),
-        expressApp = Express(),
+        express = require( 'express' ),
+        expressApp = express(),
         fileServer = require( 'http').Server( expressApp ),
         compression = require('compression'),
         socketsServer = require( 'socket.io' )( fileServer, { serveClient: false } ),
         ipAddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1",
         port = process.env.OPENSHIFT_NODEJS_PORT || 8008,
         requirejs = require( 'requirejs'),
+        rootDir = __dirname,
         liveFishTanks = null,
 
         configureAccessToCommonBrowserCode = function() {
             requirejs.config({
                 nodeRequire: require,
-                baseUrl: __dirname + '/public/js'
+                baseUrl: rootDir + '/public/js'
             });
-        },
-
-        setupTerminationHandlers = function() {
-            process.on('exit', function () {
-                terminator();
-            });
-
-            TERMINATION_SIGNALS.forEach(function (element, index, array) {
-                process.on(element, function () {
-                    terminator(element);
-                });
-            })
         },
 
         terminator = function(sig){
@@ -42,10 +30,23 @@ new function(){
             }
             console.log('%s: Node server stopped.', Date(Date.now()) );
         },
-        
+
+        setupTerminationHandlers = function() {
+            process.on('exit', function () {
+                terminator();
+            });
+
+            TERMINATION_SIGNALS.forEach(function (element) {
+                process.on(element, function () {
+                    terminator(element);
+                });
+            });
+        },
+
+
         setupExpressServer = function() {
             expressApp.use( compression() );
-            expressApp.use( Express.static(__dirname + '/public' ,{ maxAge: ONE_DAY }));
+            expressApp.use( express.static( rootDir + '/public' ,{ maxAge: ONE_DAY }));
         },
 
         setupFishTanks = function( Messages ) {

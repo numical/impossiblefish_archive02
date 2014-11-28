@@ -1,5 +1,5 @@
 define( ["app/fish", "app/messages", "app/util"], function( Fish, Messages, Util ){
-
+    'use strict';
     return function( fishTank, canvas, debug ){
 
         var
@@ -26,7 +26,7 @@ define( ["app/fish", "app/messages", "app/util"], function( Fish, Messages, Util
             addFishAction = function( fishDescriptor ){
                 if( !fishDescriptor ){
                     fishDescriptor = new Messages.FishDescriptor(
-                        "" + ++newFishCount,
+                        ++newFishCount,
                         0.5,
                         0.5,
                         Util.random( 0, 2 * Math.PI ) );

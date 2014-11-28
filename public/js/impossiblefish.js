@@ -8,7 +8,7 @@ require.config({
 // wire up models to GUI
 require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/util"],
                 function( CommandQueue, FishTank, SocketWrapper, Debug, Util ){
-
+    'use strict';
     var
         canvas = document.getElementById("fishTank"),
         debug = Util.getURLParameter( "debug" ) ? new Debug() : null,
@@ -21,11 +21,11 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
         controls = document.getElementById("controls"),
 
         fadeIn =  function(){
-            Util.fadeIn( controls, CONTROL_OPACITY )
+            Util.fadeIn( controls, CONTROL_OPACITY );
         },
 
         fadeOut =  function(){
-            Util.fadeOut( controls, CONTROL_OPACITY )
+            Util.fadeOut( controls, CONTROL_OPACITY );
         },
 
         // event propagation
@@ -66,7 +66,7 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
 
     // delay as a gross way of avoiding duplicated refreshes
     commands.connectToServer();
-})
+});
 
 
 

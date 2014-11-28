@@ -1,5 +1,5 @@
 define( ["app/util"], function( Util ) {
-
+    'use strict';
     // constants
     var FISH_DIMENSION = 10,
         FISH_AGILITY = 10,      // max change of direction (+/-) in degrees
@@ -40,7 +40,7 @@ define( ["app/util"], function( Util ) {
             xPos = x;
             yPos = y;
             rotationRadians = rotation;
-        }
+        };
 
         this.draw = function () {
             context.translate(xPos, yPos);
@@ -137,7 +137,7 @@ define( ["app/util"], function( Util ) {
                 image.draw();
                 recalculatePosition();
             }
-        }
+        };
 
         this.hide = function () {
             if ( !hidden ) {
@@ -145,23 +145,23 @@ define( ["app/util"], function( Util ) {
                 image.hide();
                 if ( debug ) {
                     debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
-                };
+                }
             }
-        }
+        };
 
         this.show = function() {
             hidden = false;
-        }
+        };
 
         this.getDescriptor = function(){
             fishdescriptor.xRelative =  xPos/fishtank.width;
             fishdescriptor.yRelative = yPos/fishtank.height;
             fishdescriptor.rotation = rotationInRadians;
             return fishdescriptor;
-        }
+        };
 
         image.setPosition( xPos, yPos, rotationInRadians);
-    }
+    };
 });
 
 

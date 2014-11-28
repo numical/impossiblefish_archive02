@@ -3,7 +3,7 @@
  */
 
 define( function(){
-
+    'use strict';
     return {
 
         TANK_UPDATE: "TANK UPDATE",
@@ -24,8 +24,7 @@ define( function(){
             this.meme = meme;
             this.xRelative = xRelative;
             this.yRelative = yRelative;
-            this.rotation = rotation
+            this.rotation = rotation;
         }
-    }
-
+    };
 });

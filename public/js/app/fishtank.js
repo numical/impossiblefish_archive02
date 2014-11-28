@@ -1,5 +1,5 @@
 define( ["app/bubble"], function( Bubble ) {
-
+    'use strict';
     return function( canvas, debug ){
 
         var CONNECTED_BORDER = "dashed ",
@@ -8,12 +8,12 @@ define( ["app/bubble"], function( Bubble ) {
             self = this,
             fishies = [],
             bubbles = [],
-            animationRequestId,
+            animationRequestId = null,
 
             addBubbles = function() {
                 bubbles.splice(0,bubbles.length);
-                var numBubbles = self.width/BUBBLE_DENSITY;
-                var guiContext = canvas.getContext("2d");
+                var numBubbles = self.width/BUBBLE_DENSITY,
+                    guiContext = canvas.getContext("2d");
                 while ( --numBubbles > 0 ) {
                     bubbles.push( new Bubble( guiContext, self ) );
                 }
@@ -26,11 +26,11 @@ define( ["app/bubble"], function( Bubble ) {
                 bubbles.forEach( function( bubble ){
                     bubble.animate();
                 });
-                animationRequestId = requestAnimationFrame( animate, canvas );
+                animationRequestId = window.requestAnimationFrame( animate, canvas );
             },
 
             pause = function() {
-                cancelAnimationFrame(animationRequestId);
+                window.cancelAnimationFrame(animationRequestId);
                 animationRequestId = null;
             };
 
@@ -55,12 +55,12 @@ define( ["app/bubble"], function( Bubble ) {
             this.left = tankDescriptor.left;
             this.right = tankDescriptor.right;
 
-            var style = ( tankDescriptor.top ) ? CONNECTED_BORDER : DISCONNECTED_BORDER;
-            ( tankDescriptor.right ) ? style += CONNECTED_BORDER : style += DISCONNECTED_BORDER;
-            ( tankDescriptor.bottom ) ? style += CONNECTED_BORDER : style += DISCONNECTED_BORDER;
-            ( tankDescriptor.left ) ? style += CONNECTED_BORDER : style += DISCONNECTED_BORDER;
+            var style = (tankDescriptor.top)  ? CONNECTED_BORDER : DISCONNECTED_BORDER;
+            style += (tankDescriptor.right) ? CONNECTED_BORDER : DISCONNECTED_BORDER;
+            style += (tankDescriptor.bottom)  ? CONNECTED_BORDER : DISCONNECTED_BORDER;
+            style += (tankDescriptor.left)  ? CONNECTED_BORDER : DISCONNECTED_BORDER;
             canvas.style.borderStyle = style;
-        }
+        };
 
         this.addFish = function( fish ){
             fishies.push( fish );
@@ -73,9 +73,9 @@ define( ["app/bubble"], function( Bubble ) {
         };
 
         this.removeFish = function( fish ){
-            var removed;
+            var removed, index;
             if ( fish ) {
-                var index = fishies.indexOf( fish );
+                index = fishies.indexOf( fish );
                 if ( index > -1 ) {
                     removed = fishies.splice( index, 1 )[0];
                 }
@@ -101,7 +101,7 @@ define( ["app/bubble"], function( Bubble ) {
             canvas.width = self.width;
             addBubbles();
         };
-    }
+    };
 });
 
 

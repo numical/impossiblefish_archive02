@@ -1,5 +1,5 @@
 define(["lib/socket.io-1.1.0", "app/messages"],function( io, Messages ) {
-
+    'use strict';
     return function( commandQueue ){
 
         var socket = null;
@@ -22,7 +22,7 @@ define(["lib/socket.io-1.1.0", "app/messages"],function( io, Messages ) {
                 console.log( "Connection error: " + ex );
                 return false;
             }
-        }
+        };
 
         this.teleportFish = function( fish ) {
             if ( socket && socket.connected ) {
@@ -37,6 +37,6 @@ define(["lib/socket.io-1.1.0", "app/messages"],function( io, Messages ) {
             } else {
                 return false;
             }
-        }
+        };
     };
 });

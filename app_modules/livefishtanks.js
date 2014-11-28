@@ -2,7 +2,7 @@
  * Handles all live fish tanks.
  */
 module.exports = function( Messages ){
-
+    'use strict';
     var
         /**
          * Constants to ensure strict equalities
@@ -11,6 +11,16 @@ module.exports = function( Messages ){
         RIGHT = 'right',
         UP = 'up',
         DOWN = 'down',
+
+        /**
+         * Temporary development debugging
+         */
+        assert = function( outcome, msg ){
+            msg = msg || 'assertion error';
+            if( !outcome ){
+                throw new Error( msg );
+            }
+        },
 
         /**
          * Records tank data and, recursively, that of neighbours
@@ -55,6 +65,20 @@ module.exports = function( Messages ){
                 tanks = Object.create( null ),
                 affectedTanks = null,
 
+                isFirstTankInNewRow = function( tankMetadata ){
+                    return tankMetadata.x + 1 > gridMetadata.gridSize;
+                },
+
+                isLastTankInRow = function( tankMetadata ){
+                    return tankMetadata.x === 0 && ( tankMetadata.y + 1 === gridMetadata.gridSize ) && !tankMetadata[LEFT];
+                },
+
+                addToAffectedTanks = function( tankMetadata ){
+                    if( affectedTanks.indexOf( tankMetadata ) < 0 ){
+                        affectedTanks.push( tankMetadata );
+                    }
+                },
+
                 InsertTankOp = {
 
                     tankMetadata: null,
@@ -95,9 +119,10 @@ module.exports = function( Messages ){
                     },
 
                     moveToAnotherNeighbour: function( stepSize ){
-                        var originalNeighbour = this.existingNeighbour;
+                        var originalNeighbour = this.existingNeighbour,
+                            possibleNewNeighbour = null;
                         while( stepSize ){
-                            var possibleNewNeighbour = this.existingNeighbour[this.direction];
+                            possibleNewNeighbour = this.existingNeighbour[this.direction];
                             if( !possibleNewNeighbour ){
                                 // no neighbour defined
                                 return false;
@@ -108,37 +133,33 @@ module.exports = function( Messages ){
                             }
                             switch( this.direction ){
                                 case LEFT:
-                                    if( possibleNewNeighbour.x !== this.xInsertCoordinate - 1 ){
-                                        //isAGapBetweenExistingTanks = true;
-                                        return false;
-                                    } else{
+                                    if( possibleNewNeighbour.x === this.xInsertCoordinate - 1 ){
                                         this.xInsertCoordinate--;
                                         break;
                                     }
+                                    // there's a gap between existing tanks
+                                    return false;
                                 case RIGHT:
-                                    if( possibleNewNeighbour.x !== this.xInsertCoordinate + 1 ){
-                                        //isAGapBetweenExistingTanks = true;
-                                        return false;
-                                    } else{
+                                    if( possibleNewNeighbour.x === this.xInsertCoordinate + 1 ){
                                         this.xInsertCoordinate++;
                                         break;
                                     }
+                                    // there's a gap between existing tanks
+                                    return false;
                                 case UP:
-                                    if( possibleNewNeighbour.y !== this.yInsertCoordinate - 1 ){
-                                        //isAGapBetweenExistingTanks = true;
-                                        return false;
-                                    } else{
+                                    if( possibleNewNeighbour.y === this.yInsertCoordinate - 1 ){
                                         this.yInsertCoordinate--;
                                         break;
                                     }
+                                    // there's a gap between existing tanks
+                                    return false;
                                 case DOWN:
-                                    if( possibleNewNeighbour.y !== this.yInsertCoordinate + 1 ){
-                                        //isAGapBetweenExistingTanks = true;
-                                        return false;
-                                    } else{
+                                    if( possibleNewNeighbour.y === this.yInsertCoordinate + 1 ){
                                         this.yInsertCoordinate++;
                                         break;
                                     }
+                                    // there's a gap between existing tanks
+                                    return false;
                             }
                             this.existingNeighbour = possibleNewNeighbour;
                             stepSize--;
@@ -147,7 +168,7 @@ module.exports = function( Messages ){
                     },
 
                     insertNextToNeighbour: function(){
-                        var oppositeDirection;
+                        var oppositeDirection, last, focus;
                         switch( this.direction ){
                             case LEFT:
                                 oppositeDirection = RIGHT;
@@ -177,7 +198,7 @@ module.exports = function( Messages ){
                             this.existingNeighbour[this.direction] = this.tankMetadata;
                             this.tankMetadata[oppositeDirection] = this.existingNeighbour;
                             // find 'last' tank - i.e. the tank that previously connected to focus
-                            var last = this.existingNeighbour;
+                            last = this.existingNeighbour;
                             while( last[oppositeDirection] !== this.tankMetadata[oppositeDirection] ){
                                 last = last[oppositeDirection];
                                 assert( last );  // no gaps
@@ -202,56 +223,56 @@ module.exports = function( Messages ){
                         switch( this.direction ){
                             case RIGHT:
                                 // always be on top row
-                                var up = (this.existingNeighbour[UP]) ? this.existingNeighbour[UP][RIGHT] : null;
+                                focus = (this.existingNeighbour[UP]) ? this.existingNeighbour[UP][RIGHT] : null;
                                 // if there is an up neighbour that is truly above (i.e not looped)
-                                if( up && ( up.x === this.tankMetadata.x  ) ){
-                                    this.tankMetadata[UP] = up;
+                                if( focus && ( focus.x === this.tankMetadata.x  ) ){
+                                    this.tankMetadata[UP] = focus;
                                     // if up is already connected to a tank to its down, inject new tank
-                                    if( up[DOWN] ){
-                                        up[DOWN][UP] = this.tankMetadata;
-                                        addToAffectedTanks( up[DOWN] );
-                                        this.tankMetadata[DOWN] = up[DOWN];
-                                        up[DOWN] = this.tankMetadata;
-                                        addToAffectedTanks( up );
+                                    if( focus[DOWN] ){
+                                        focus[DOWN][UP] = this.tankMetadata;
+                                        addToAffectedTanks( focus[DOWN] );
+                                        this.tankMetadata[DOWN] = focus[DOWN];
+                                        focus[DOWN] = this.tankMetadata;
+                                        addToAffectedTanks( focus );
                                     }
                                 }
                                 break;
                             case LEFT:
                                 // as we are going clockwise, the tank above and to the left of focus (if any )
                                 // will become the top of the new tank
-                                var above = this.existingNeighbour[UP][LEFT];
-                                if( above ){
-                                    this.tankMetadata[UP] = above;
+                                focus = this.existingNeighbour[UP][LEFT];
+                                if( focus ){
+                                    this.tankMetadata[UP] = focus;
                                     // if above is already connected to a tank below it, inject new tank
-                                    if( above[DOWN] ){
-                                        above[DOWN][UP] = this.tankMetadata;
-                                        addToAffectedTanks( above[DOWN] );
-                                        this.tankMetadata[DOWN] = above[DOWN];
-                                        above[DOWN] = this.tankMetadata;
-                                        addToAffectedTanks( above );
+                                    if( focus[DOWN] ){
+                                        focus[DOWN][UP] = this.tankMetadata;
+                                        addToAffectedTanks( focus[DOWN] );
+                                        this.tankMetadata[DOWN] = focus[DOWN];
+                                        focus[DOWN] = this.tankMetadata;
+                                        addToAffectedTanks( focus );
                                     } else{
                                         // only above and new tank are in this column so loop
-                                        this.tankMetadata[DOWN] = above;
-                                        above[DOWN] = this.tankMetadata;
-                                        above[UP] = this.tankMetadata;
-                                        addToAffectedTanks( above );
+                                        this.tankMetadata[DOWN] = focus;
+                                        focus[DOWN] = this.tankMetadata;
+                                        focus[UP] = this.tankMetadata;
+                                        addToAffectedTanks( focus );
                                     }
                                 }
                                 break;
                             case DOWN:
                                 // as we are going clockwise, the tank to the left and down of the focus (if any )
                                 // will become the left of the new tank - unless this is new row
-                                var left = this.existingNeighbour[LEFT][DOWN];
+                                focus = this.existingNeighbour[LEFT][DOWN];
                                 // if there is an left neighbour that is truly left (i.e not looped)
-                                if( left && ( left.y === this.tankMetadata.y  ) ){
-                                    this.tankMetadata[LEFT] = left;
+                                if( focus && ( focus.y === this.tankMetadata.y  ) ){
+                                    this.tankMetadata[LEFT] = focus;
                                     // if left is already connected to a tank to its right, inject new tank
-                                    if( left[RIGHT] ){
-                                        left[RIGHT][LEFT] = this.tankMetadata;
-                                        addToAffectedTanks( left[RIGHT] );
-                                        this.tankMetadata[RIGHT] = left[RIGHT];
-                                        left[RIGHT] = this.tankMetadata;
-                                        addToAffectedTanks( left );
+                                    if( focus[RIGHT] ){
+                                        focus[RIGHT][LEFT] = this.tankMetadata;
+                                        addToAffectedTanks( focus[RIGHT] );
+                                        this.tankMetadata[RIGHT] = focus[RIGHT];
+                                        focus[RIGHT] = this.tankMetadata;
+                                        addToAffectedTanks( focus );
                                     }
                                 }
                                 break;
@@ -271,9 +292,9 @@ module.exports = function( Messages ){
                     tankMetadata: null,
 
                     run: function(){
-                        var neighbour = ( this.tankMetadata[RIGHT] ) ? this.tankMetadata[RIGHT] : this.tankMetadata[DOWN];
+                        var neighbour = this.tankMetadata[RIGHT] || this.tankMetadata[DOWN];
                         this.swapTanks( this.tankMetadata, neighbour );
-                        return neighbour
+                        return neighbour;
                     },
 
                     swapTanks: function( first, second ){
@@ -404,7 +425,7 @@ module.exports = function( Messages ){
                     },
 
                     connectNeighbours: function( direction, oppositeDirection, orthogonalDirection ){
-                        var focus = this.tankMetadata[direction];
+                        var focus = this.tankMetadata[direction], op;
                         if( focus ){
                             // unless if up and down neighbours are same, then a single tank on column
                             if( focus === this.tankMetadata[oppositeDirection] ){
@@ -412,7 +433,7 @@ module.exports = function( Messages ){
                                 focus[direction] = null;
                                 // an orphan? re-add to grid
                                 if( !focus[orthogonalDirection] && focus !== initialTank ){
-                                    var op = Object.create( InsertTankOp, {
+                                    op = Object.create( InsertTankOp, {
                                         tankMetadata: {value: focus}
                                     } );
                                     op.run();
@@ -432,21 +453,8 @@ module.exports = function( Messages ){
                             }
                         }
                     }
-                },
-
-                isFirstTankInNewRow = function( tankMetadata ){
-                    return tankMetadata.x + 1 > gridMetadata.gridSize
-                },
-
-                isLastTankInRow = function( tankMetadata ){
-                    return tankMetadata.x === 0 && ( tankMetadata.y + 1 === gridMetadata.gridSize ) && !tankMetadata[LEFT]
-                },
-
-                addToAffectedTanks = function( tankMetadata ){
-                    if( affectedTanks.indexOf( tankMetadata ) < 0 ){
-                        affectedTanks.push( tankMetadata );
-                    }
                 };
+
 
             this.addFishTank = function( tankMetadata, callback ){
                 if( gridMetadata.tankCount === 0 ){
@@ -477,6 +485,7 @@ module.exports = function( Messages ){
             };
 
             this.removeFishTank = function( tankMetadata, callback ){
+                var op, index;
                 if( gridMetadata.tankCount === 1 ){
                     initialTank = null;
                     delete tanks[tankMetadata.id];
@@ -489,12 +498,12 @@ module.exports = function( Messages ){
                     affectedTanks = [];
                     tankMetadata = tanks[tankMetadata.id];
                     if( tankMetadata === initialTank ){
-                        var op = Object.create( SwapTankWithNeighbourOp, {
+                        op = Object.create( SwapTankWithNeighbourOp, {
                             tankMetadata: {value: tankMetadata}
                         } );
                         initialTank = op.run();
                     }
-                    var op = Object.create( ExtractTankOp, {
+                    op = Object.create( ExtractTankOp, {
                         tankMetadata: {value: tankMetadata}
                     } );
                     op.run();
@@ -503,10 +512,10 @@ module.exports = function( Messages ){
                     if( gridMetadata.tankCount === 1 ){
                         gridMetadata.gridSize = 1;
                     } else if( isLastTankInRow( tankMetadata ) ){
-                        gridMetadata.gridSize--
+                        gridMetadata.gridSize--;
                     }
                     if( callback ){
-                        var index = affectedTanks.indexOf( tankMetadata );
+                        index = affectedTanks.indexOf( tankMetadata );
                         if( index > -1 ){
                             affectedTanks.splice( index, 1 );
                         }
@@ -523,18 +532,8 @@ module.exports = function( Messages ){
                 return {
                     gridSize: gridMetadata.gridSize,
                     tankCount: gridMetadata.tankCount
-                }
-            }
-        },
-
-        /**
-         * Temporary development debugging
-         */
-        assert = function( outcome, msg ){
-            msg = msg || 'assertion error';
-            if( !outcome ){
-                throw new Error( msg );
-            }
+                };
+            };
         },
 
         fishTanks =  new FishTanks(); //Object.create( FishTanks );
@@ -568,8 +567,8 @@ module.exports = function( Messages ){
         },
 
         teleportFishFromSocket: function( socket, fishDescriptor ) {
-            var from = fishTanks.getFishTankById( socket.id );
-            var to;
+            var from = fishTanks.getFishTankById( socket.id ),
+                to;
             if ( fishDescriptor.xRelative === 0 ) {
                 to = from.left;
                 fishDescriptor.xRelative = 1;
