@@ -1,5 +1,5 @@
 define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
-    function( Fish, Messages, IO, Util ){
+    function( Fish, Messages, Util, IO){
         'use strict';
         var
             self = this,
@@ -7,7 +7,6 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
             fishtank = null,
             socket = null,
             newFishCount = 0,
-            debug = null,
             publicContract = null,
 
             processCommands = function(){
@@ -32,7 +31,7 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
                         0.5,
                         Util.random( 0, 2 * Math.PI ) );
                 }
-                var fish = new Fish( publicContract, fishtank, fishDescriptor, debug );
+                var fish = new Fish( publicContract, fishtank, fishDescriptor );
                 fishtank.addFish( fish );
             },
 
@@ -77,13 +76,10 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
 
         publicContract = {
 
-            init: function( fishTank, deBug ){
+            start: function( fishTank ){
                 fishtank = fishTank;
-                debug = deBug;
                 processCommands();
-            },
-
-            connectToServer: function(){
+                // delay as a gross way of avoiding duplicated refreshes
                 commandQueue.push( {action: connectToServerAction} );
             },
 

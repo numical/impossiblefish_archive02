@@ -1,6 +1,6 @@
-define( ["app/gui","app/bubble"], function( GUI, Bubble ) {
+define( ["app/gui","app/bubble","app/debug"], function( GUI, Bubble, Debug ) {
     'use strict';
-    return function( debug ){
+    return function(){
 
         var CONNECTED_BORDER = "dashed ",
             DISCONNECTED_BORDER = "solid ",
@@ -67,9 +67,7 @@ define( ["app/gui","app/bubble"], function( GUI, Bubble ) {
             if ( fishies.length === 1 ) {
                 animate();
             }
-            if ( debug ) {
-                debug.log( "Fish '" + fish.getDescriptor().meme + "' added, total fishies = " + fishies.length );
-            }
+            Debug.log( "Fish '" + fish.getDescriptor().meme + "' added, total fishies = " + fishies.length );
         };
 
         this.removeFish = function( fish ){
@@ -87,9 +85,7 @@ define( ["app/gui","app/bubble"], function( GUI, Bubble ) {
                 if ( fishies.length === 0 ) {
                     pause();
                 }
-                if ( debug ) {
-                    debug.logWithStackTrace( "Fish '" + removed.getDescriptor().meme + "' removed, total fishies = " + fishies.length );
-                }
+                Debug.logWithStackTrace( "Fish '" + removed.getDescriptor().meme + "' removed, total fishies = " + fishies.length );
             }
         };
 

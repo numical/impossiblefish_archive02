@@ -10,9 +10,7 @@ require(["app/commands", "app/fishtank", "app/debug", "app/util"],
                 function( CommandQueue, FishTank, Debug, Util ){
     'use strict';
     var
-        debug = Util.getURLParameter( "debug" ) ? new Debug() : null,
-        commands = new CommandQueue(),
-        fishtank = new FishTank( debug ),
+        fishtank = new FishTank(),
 
         // set up control container
         CONTROL_OPACITY = 1.0,
@@ -30,10 +28,10 @@ require(["app/commands", "app/fishtank", "app/debug", "app/util"],
         eventPropagation = function(event) {
             switch (event.target.id) {
                 case "addFish":
-                    commands.addFish();
+                    CommandQueue.addFish();
                     break;
                 case "removeFish":
-                    commands.removeFish();
+                    CommandQueue.removeFish();
                     break;
                 case "fishTank":
                     fishtank.togglePause();
@@ -41,10 +39,8 @@ require(["app/commands", "app/fishtank", "app/debug", "app/util"],
             }
         };
 
-    // set up debugging
-    if ( debug ) {
-        debug.displayConsole();
-    }
+    // set up debugging if necessary
+    Debug.displayConsole();
 
     // set up dynamic sizing
     window.addEventListener('resize', fishtank.resize, false);
@@ -60,10 +56,7 @@ require(["app/commands", "app/fishtank", "app/debug", "app/util"],
     window.addEventListener('click', eventPropagation, false );
 
     // wire up command queue
-    commands.init( fishtank, debug );
-
-    // delay as a gross way of avoiding duplicated refreshes
-    commands.connectToServer();
+    CommandQueue.start( fishtank );
 });
 
 

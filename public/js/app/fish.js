@@ -1,4 +1,4 @@
-define( ["app/gui","app/util"], function( GUI, Util ) {
+define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
     'use strict';
     // constants
     var FISH_DIMENSION = 10,
@@ -74,7 +74,7 @@ define( ["app/gui","app/util"], function( GUI, Util ) {
     }
 
     // the main fish object defining behaviour
-    return function ( commands, fishtank, fishdescriptor, debug ) {
+    return function ( commands, fishtank, fishdescriptor ) {
 
         var self = this,
             xPos = fishtank.width * fishdescriptor.xRelative,
@@ -143,9 +143,7 @@ define( ["app/gui","app/util"], function( GUI, Util ) {
             if ( !hidden ) {
                 hidden = true;
                 image.hide();
-                if ( debug ) {
-                    debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
-                }
+                Debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
             }
         };
 
