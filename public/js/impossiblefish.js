@@ -17,7 +17,7 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
         socketwrapper = new SocketWrapper( commands ),
 
         // set up control container
-        CONTROL_OPACITY = 0.6,
+        CONTROL_OPACITY = 1.0,
         controls = document.getElementById("controls"),
 
         fadeIn =  function(){

@@ -7,8 +7,7 @@ define(["lib/stacktrace"], function( generateStackTrace ){
             console = document.getElementById( "debugConsole" );
 
         this.displayConsole = function(){
-            document.getElementById( "fishTank" ).style.height = "70vh";
-            document.getElementById( "popup" ).style.top = "70vh";
+            document.getElementById( "fishTank" ).style.height = "65vh";
             console.style.display = "block";
             console.addEventListener( "click", function(){
                 window.prompt( "Copy to clipboard: Ctrl+C, Enter", console.value );

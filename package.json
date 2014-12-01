@@ -10,9 +10,7 @@
     "requirejs": "^2.1.15",
     "compression": "^1.1.0",
     "express": "^4.9.6",
-    "http": "0.0.0",
     "socket.io": "^1.1.0",
-    "mout": "^0.1.0",
     "stacktrace-js": "^0.6.4"
   },
   "devDependencies": {

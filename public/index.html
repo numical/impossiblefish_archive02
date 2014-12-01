@@ -9,16 +9,26 @@
 </head>
 <body>
     <h1 class="fishy">impossible fish</h1>
+    <h2 class="fishy">(Anonymous Plaice, cyberspace)</h2>
     <canvas id="fishTank" width="800" height="800" class="disconnected">
         Your browser does not support an HTML canvas so, sorry, you cannot have a fish tank :-(
     </canvas>
-    <div id="popup">
-        <div id="controls" class="fishy">
+    <div id="popupContainer" class="fishy">
+        <form id="tankInfo" class="popup">
+            What shall we call your fishtank?
+            <br/>
+            <input type="text" name="tankname" value="Anonymous Plaice"/>
+            <br/>
+            We also want to work out your location.
+            <br/>
+            It's up to you, but more fun if you say yes.
+        </form>
+        <div id="controls" class="popup">
             <a href="#" id="addFish">Add Fish</a>
             <a href="#" id="removeFish">Remove Fish</a>
         </div>
     </div>
     <textarea id="debugConsole" readonly></textarea>
-    <script data-main="js/impossiblefish.js" src="js/lib/require.js"></script>
+    <script data-main="js/impossiblefish.js" src="js/require.js"></script>
 </body>
 </html>
