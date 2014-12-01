@@ -1,23 +1,23 @@
-define(["lib/stacktrace"], function( generateStackTrace ){
+define(["app/gui","lib/stacktrace"], function( GUI, generateStackTrace ){
     'use strict';
     return function(){
 
         var NEW_LINE = "\n",
             self = this,
-            console = document.getElementById( "debugConsole" );
+            debugConsole = GUI.getDebugConsole();
 
         this.displayConsole = function(){
-            document.getElementById( "fishTank" ).style.height = "65vh";
-            console.style.display = "block";
-            console.addEventListener( "click", function(){
-                window.prompt( "Copy to clipboard: Ctrl+C, Enter", console.value );
+            GUI.getFishTankCanvas().style.height = "65vh";
+            debugConsole.style.display = "block";
+            debugConsole.addEventListener( "click", function(){
+                window.prompt( "Copy to clipboard: Ctrl+C, Enter", debugConsole.value );
             } );
         };
 
         this.log = function( message ){
             message += NEW_LINE;
-            console.value += message;
-            console.scrollTop = console.scrollHeight;
+            debugConsole.value += message;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
         };
 
         this.logWithStackTrace = function( message ){

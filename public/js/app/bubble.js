@@ -1,15 +1,16 @@
-define( ["app/util"], function (Util) {
+define( ["app/gui","app/util"], function ( GUI, Util) {
     'use strict';
 
     var MAX_BUBBLE_RADIUS = 10,
         BORDER_COLOUR = "black",
-        BUBBLE_COLOUR = "white",
-        MIN_SPEED = 0.3,
-        MAX_SPEED = 0.7;
+        BUBBLE_COLOUR = "white";
+/*        MIN_SPEED = 0.3,
+        MAX_SPEED = 0.7;*/
 
 
-    return function (context, fishtank){
+    return function ( fishtank ){
         var
+            context = GUI.getFishTankContext(),
             bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS ),
             imageRadius = bubbleRadius + context.lineWidth,
             xPos = Util.random( MAX_BUBBLE_RADIUS, fishtank.width - MAX_BUBBLE_RADIUS ),

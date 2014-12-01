@@ -1,21 +1,21 @@
-define( ["app/bubble"], function( Bubble ) {
+define( ["app/gui","app/bubble"], function( GUI, Bubble ) {
     'use strict';
-    return function( canvas, debug ){
+    return function( debug ){
 
         var CONNECTED_BORDER = "dashed ",
             DISCONNECTED_BORDER = "solid ",
             BUBBLE_DENSITY = 30, // width pixels per bubble
             self = this,
+            canvas = GUI.getFishTankCanvas(),
             fishies = [],
             bubbles = [],
             animationRequestId = null,
 
             addBubbles = function() {
                 bubbles.splice(0,bubbles.length);
-                var numBubbles = self.width/BUBBLE_DENSITY,
-                    guiContext = canvas.getContext("2d");
+                var numBubbles = self.width/BUBBLE_DENSITY;
                 while ( --numBubbles > 0 ) {
-                    bubbles.push( new Bubble( guiContext, self ) );
+                    bubbles.push( new Bubble( self ) );
                 }
             },
 

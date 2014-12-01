@@ -6,15 +6,13 @@ require.config({
 });
 
 // wire up models to GUI
-require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/util"],
-                function( CommandQueue, FishTank, SocketWrapper, Debug, Util ){
+require(["app/commands", "app/fishtank", "app/debug", "app/util"],
+                function( CommandQueue, FishTank, Debug, Util ){
     'use strict';
     var
-        canvas = document.getElementById("fishTank"),
         debug = Util.getURLParameter( "debug" ) ? new Debug() : null,
-        fishtank = new FishTank( canvas, debug ),
-        commands = new CommandQueue( fishtank, canvas, debug ),
-        socketwrapper = new SocketWrapper( commands ),
+        commands = new CommandQueue(),
+        fishtank = new FishTank( debug ),
 
         // set up control container
         CONTROL_OPACITY = 1.0,
@@ -62,7 +60,7 @@ require(["app/commands", "app/fishtank", "app/socketwrapper", "app/debug", "app/
     window.addEventListener('click', eventPropagation, false );
 
     // wire up command queue
-     commands.init( socketwrapper );
+    commands.init( fishtank, debug );
 
     // delay as a gross way of avoiding duplicated refreshes
     commands.connectToServer();

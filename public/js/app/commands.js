@@ -1,26 +1,27 @@
-define( ["app/fish", "app/messages", "app/util"], function( Fish, Messages, Util ){
-    'use strict';
-    return function( fishTank, canvas, debug ){
-
+define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
+    function( Fish, Messages, IO, Util ){
+        'use strict';
         var
             self = this,
-            commands = [],
-            socketwrapper = null,
-            guiContext = canvas.getContext( "2d" ),
+            commandQueue = [],
+            fishtank = null,
+            socket = null,
             newFishCount = 0,
+            debug = null,
+            publicContract = null,
 
             processCommands = function(){
                 setTimeout( function(){
-                    if( commands.length > 0 ){
-                        var command = commands.shift();
-                        command.action.apply( self, command.args );
+                    if( commandQueue.length > 0 ){
+                        var command = commandQueue.shift();
+                        command.action.call( self, command.arg );
                     }
                     processCommands();
                 }, 100 );
             },
 
-            connectToServerAction = function(){
-                socketwrapper.connectToServer();
+            updateTankAction = function( tankDescriptor ){
+                fishtank.updateConnectedTanks( tankDescriptor );
             },
 
             addFishAction = function( fishDescriptor ){
@@ -31,49 +32,73 @@ define( ["app/fish", "app/messages", "app/util"], function( Fish, Messages, Util
                         0.5,
                         Util.random( 0, 2 * Math.PI ) );
                 }
-                var fish = new Fish( self, guiContext, fishTank, fishDescriptor, debug );
-                fishTank.addFish( fish );
+                var fish = new Fish( publicContract, fishtank, fishDescriptor, debug );
+                fishtank.addFish( fish );
             },
 
-            removeFishAction = function(){
-                fishTank.removeFish();
+            removeFishAction = function( fish ){
+                fishtank.removeFish( fish );
             },
 
-            teleportFishAction = function( fish ){
-                if( socketwrapper.teleportFish( fish ) ){
-                    fishTank.removeFish( fish );
-                } else{
-                    fish.show();
+            connectToServerAction = function(){
+                try{
+                    socket = IO.connect();
+
+                    socket.on( Messages.TANK_UPDATE, function( tankDescriptor ){
+                        commandQueue.push( {action: updateTankAction, arg: tankDescriptor} );
+                    } );
+
+                    socket.on( Messages.FISH_TELEPORT, function( fishDescriptor ){
+                        commandQueue.push( {action: addFishAction, arg: fishDescriptor} );
+                    } );
+
+                    return true;
+                }
+                catch( ex ){
+                    console.log( "Connection error: " + ex );
+                    return false;
                 }
             },
 
-            updateTankAction = function( tankDescriptor ){
-                fishTank.updateConnectedTanks( tankDescriptor );
+            teleportFishAction = function( fish ){
+                if( socket && socket.connected ){
+                    try{
+                        socket.emit( Messages.FISH_TELEPORT, fish.getDescriptor() );
+                        commandQueue.push( {action: removeFishAction, arg: fish} );
+                    } catch( ex ){
+                        console.log( "Teleport error: " + ex );
+                        fish.show();
+                    }
+
+                } else{
+                    fish.show();
+                }
             };
 
-        this.init = function( socketWrapper ){
-            socketwrapper = socketWrapper;
-            processCommands();
+        publicContract = {
+
+            init: function( fishTank, deBug ){
+                fishtank = fishTank;
+                debug = deBug;
+                processCommands();
+            },
+
+            connectToServer: function(){
+                commandQueue.push( {action: connectToServerAction} );
+            },
+
+            addFish: function( fishDescriptor ){
+                commandQueue.push( {action: addFishAction, arg: fishDescriptor} );
+            },
+
+            removeFish: function(){
+                commandQueue.push( {action: removeFishAction} );
+            },
+
+            teleportFish: function( fish ){
+                commandQueue.push( {action: teleportFishAction, args: fish} );
+            }
         };
 
-        this.connectToServer = function(){
-            commands.push( {action: connectToServerAction} );
-        };
-
-        this.addFish = function( fishDescriptor ){
-            commands.push( {action: addFishAction, args: [fishDescriptor]} );
-        };
-
-        this.removeFish = function(){
-            commands.push( {action: removeFishAction} );
-        };
-
-        this.updateTank = function( tankDescriptor ){
-            commands.push( {action: updateTankAction, args: [tankDescriptor]} );
-        };
-
-        this.teleportFish = function( fish ){
-            commands.push( {action: teleportFishAction, args: [fish]} );
-        };
-    };
-} );
+        return publicContract;
+    } );

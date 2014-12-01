@@ -1,4 +1,4 @@
-define( ["app/util"], function( Util ) {
+define( ["app/gui","app/util"], function( GUI, Util ) {
     'use strict';
     // constants
     var FISH_DIMENSION = 10,
@@ -32,9 +32,9 @@ define( ["app/util"], function( Util ) {
         };
 
     // encapsulate the drawing logic of the fish
-    function FishImage(context) {
+    function FishImage() {
 
-        var xPos, yPos, rotationRadians;
+        var xPos, yPos, rotationRadians, context = GUI.getFishTankContext();
 
         this.setPosition = function (x, y, rotation) {
             xPos = x;
@@ -74,14 +74,14 @@ define( ["app/util"], function( Util ) {
     }
 
     // the main fish object defining behaviour
-    return function ( commands, context, fishtank, fishdescriptor, debug ) {
+    return function ( commands, fishtank, fishdescriptor, debug ) {
 
         var self = this,
             xPos = fishtank.width * fishdescriptor.xRelative,
             yPos = fishtank.height * fishdescriptor.yRelative,
             rotationInRadians = fishdescriptor.rotation,
             hidden = false,
-            image = new FishImage(context),
+            image = new FishImage(),
 
             recalculatePosition = function () {
 
