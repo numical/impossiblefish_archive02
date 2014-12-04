@@ -1,4 +1,5 @@
-define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
+define( ["app/commands", "app/fishtank","app/gui","app/util","app/debug"], function(
+    CommandQueue, FishTank, GUI, Util, Debug ) {
     'use strict';
     // constants
     var FISH_DIMENSION = 10,
@@ -74,11 +75,11 @@ define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
     }
 
     // the main fish object defining behaviour
-    return function ( commands, fishtank, fishdescriptor ) {
+    return function ( fishdescriptor ) {
 
         var self = this,
-            xPos = fishtank.width * fishdescriptor.xRelative,
-            yPos = fishtank.height * fishdescriptor.yRelative,
+            xPos = FishTank.width * fishdescriptor.xRelative,
+            yPos = FishTank.height * fishdescriptor.yRelative,
             rotationInRadians = fishdescriptor.rotation,
             hidden = false,
             image = new FishImage(),
@@ -94,34 +95,34 @@ define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
 
 
                 if (xPos < 1) {
-                    if (fishtank.left) {
+                    if (FishTank.left) {
                         self.hide();
                         xPos = 0;
-                        commands.teleportFish(self);
+                        CommandQueue.teleportFish(self);
                     } else {
-                        xPos = fishtank.width - 1;
+                        xPos = FishTank.width - 1;
                     }
-                } else if (xPos >= fishtank.width) {
-                    if (fishtank.right) {
+                } else if (xPos >= FishTank.width) {
+                    if (FishTank.right) {
                         self.hide();
-                        xPos = fishtank.width;
-                        commands.teleportFish(self);
+                        xPos = FishTank.width;
+                        CommandQueue.teleportFish(self);
                     } else {
                         xPos = 0;
                     }
                 } else if (yPos < 1) {
-                    if (fishtank.top) {
+                    if (FishTank.top) {
                         self.hide();
                         yPos = 0;
-                        commands.teleportFish(self);
+                        CommandQueue.teleportFish(self);
                     } else {
-                        yPos = fishtank.height - 1;
+                        yPos = FishTank.height - 1;
                     }
-                } else if (yPos >= fishtank.height) {
-                    if (fishtank.bottom) {
+                } else if (yPos >= FishTank.height) {
+                    if (FishTank.bottom) {
                         self.hide();
-                        yPos = fishtank.height;
-                        commands.teleportFish(self);
+                        yPos = FishTank.height;
+                        CommandQueue.teleportFish(self);
                     } else {
                         yPos = 1;
                     }
@@ -154,8 +155,8 @@ define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
         };
 
         this.getDescriptor = function(){
-            fishdescriptor.xRelative =  xPos/fishtank.width;
-            fishdescriptor.yRelative = yPos/fishtank.height;
+            fishdescriptor.xRelative =  xPos/FishTank.width;
+            fishdescriptor.yRelative = yPos/FishTank.height;
             fishdescriptor.rotation = rotationInRadians;
             return fishdescriptor;
         };

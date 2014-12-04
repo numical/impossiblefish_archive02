@@ -1,12 +1,11 @@
 define( ["app/fishtank", "app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
-    function( FishTank, Fish, Messages, Util, IO){
+    function( FishTank, Fish, Messages, Util, IO ){
         'use strict';
         var
             self = this,
             commandQueue = [],
             socket = null,
             newFishCount = 0,
-            publicContract = null,
 
             processNextCommand = function(){
                 setTimeout( function(){
@@ -30,7 +29,7 @@ define( ["app/fishtank", "app/fish", "app/messages", "app/util", "lib/socket.io-
                         0.5,
                         Util.random( 0, 2 * Math.PI ) );
                 }
-                var fish = new Fish( publicContract, FishTank, fishDescriptor );
+                var fish = new Fish( fishDescriptor );
                 FishTank.addFish( fish );
             },
 
@@ -71,22 +70,22 @@ define( ["app/fishtank", "app/fish", "app/messages", "app/util", "lib/socket.io-
                 } else{
                     fish.show();
                 }
+            },
+
+            publicContract = {
+
+                addFish: function( fishDescriptor ){
+                    commandQueue.push( {action: addFishAction, arg: fishDescriptor} );
+                },
+
+                removeFish: function(){
+                    commandQueue.push( {action: removeFishAction} );
+                },
+
+                teleportFish: function( fish ){
+                    commandQueue.push( {action: teleportFishAction, arg: fish} );
+                }
             };
-
-        publicContract = {
-
-            addFish: function( fishDescriptor ){
-                commandQueue.push( {action: addFishAction, arg: fishDescriptor} );
-            },
-
-            removeFish: function(){
-                commandQueue.push( {action: removeFishAction} );
-            },
-
-            teleportFish: function( fish ){
-                commandQueue.push( {action: teleportFishAction, arg: fish} );
-            }
-        };
 
         processNextCommand();
         commandQueue.push( {action: connectToServerAction} );
