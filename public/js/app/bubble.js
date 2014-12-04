@@ -8,15 +8,15 @@ define( ["app/gui","app/util"], function ( GUI, Util) {
         MAX_SPEED = 0.7;*/
 
 
-    return function ( fishtank ){
+    return function ( parentTank ){
         var
             context = GUI.getFishTankContext(),
             bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS ),
             imageRadius = bubbleRadius + context.lineWidth,
-            xPos = Util.random( MAX_BUBBLE_RADIUS, fishtank.width - MAX_BUBBLE_RADIUS ),
-            yPos = fishtank.height,
+            xPos = Util.random( MAX_BUBBLE_RADIUS, parentTank.width - MAX_BUBBLE_RADIUS ),
+            yPos = parentTank.height,
             speed = 0.5, // Util.random( MIN_SPEED, MAX_SPEED ),
-            delay = Util.random( 0, fishtank.height / speed ),
+            delay = Util.random( 0, parentTank.height / speed ),
 
             draw = function(){
                 context.translate( xPos, yPos );
@@ -38,8 +38,8 @@ define( ["app/gui","app/util"], function ( GUI, Util) {
             recalculatePosition = function(){
                 yPos -= speed;
                 if( yPos <= -imageRadius ){
-                    yPos = fishtank.height;
-                    xPos = Util.random( MAX_BUBBLE_RADIUS, fishtank.width - MAX_BUBBLE_RADIUS );
+                    yPos = parentTank.height;
+                    xPos = Util.random( MAX_BUBBLE_RADIUS, parentTank.width - MAX_BUBBLE_RADIUS );
                 }
             };
 

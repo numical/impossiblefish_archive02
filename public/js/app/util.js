@@ -17,14 +17,14 @@ define( function(){
             return min + Math.floor( (max - min) * Math.random() );
         },
 
+
+        /*
         // random number utility - ensures an integer returned
         // - see http://www.html5rocks.com/en/tutorials/canvas/performance/#toc-avoid-float
         randomInt: function( min, max ){
-            /*jslint bitwise: true */
-            var val = ( min + Math.floor( (max - min) * Math.random() ) + 0.5 ) | 0;
-            /*jslint bitwise: false */
-            return val;
+            return ( min + Math.floor( (max - min) * Math.random() ) + 0.5 ) | 0;
         },
+        */
 
         // GUI fade
         fadeOut: function( element ){

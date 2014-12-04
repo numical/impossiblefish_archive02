@@ -2,17 +2,9 @@ define(["app/gui","app/util","lib/stacktrace"], function( GUI, Util, generateSta
     'use strict';
 
     var NEW_LINE = "\n",
-        mode = null,
         debugConsole = null,
 
-        activeMode = {
-            init: function(){
-                GUI.getFishTankCanvas().style.height = "65vh";
-                debugConsole.style.display = "block";
-                debugConsole.addEventListener( "click", function(){
-                    window.prompt( "Copy to clipboard: Ctrl+C, Enter", debugConsole.value );
-                } );
-            },
+        publicContract = {
             log: function( message ){
                 message += NEW_LINE;
                 debugConsole.value += message;
@@ -27,23 +19,22 @@ define(["app/gui","app/util","lib/stacktrace"], function( GUI, Util, generateSta
                         message += NEW_LINE;
                     }
                 } );
-                mode.log( message );
+                publicContract.log( message );
             }
-        },
-
-        dummyMode = {
-            init: function(){},
-            log: function(){},
-            logWithStackTrace: function(){}
         };
 
     if ( Util.getURLParameter( "debug" ) ){
         debugConsole = GUI.getDebugConsole();
-        mode = activeMode;
-    } else {
-        mode = dummyMode;
+        if ( debugConsole ) {
+            GUI.getFishTankCanvas().style.height = "65vh";
+            debugConsole.style.display = "block";
+            debugConsole.addEventListener( "click", function(){
+                window.prompt( "Copy to clipboard: Ctrl+C, Enter", debugConsole.value );
+            } );
+        }
+        return publicContract;
     }
-    return mode;
 
+    return null;
 });
 

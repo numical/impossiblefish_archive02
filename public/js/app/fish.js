@@ -143,7 +143,9 @@ define( ["app/gui","app/util","app/debug"], function( GUI, Util, Debug ) {
             if ( !hidden ) {
                 hidden = true;
                 image.hide();
-                Debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
+                if ( Debug ) {
+                    Debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
+                }
             }
         };
 

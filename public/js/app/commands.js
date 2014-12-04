@@ -1,26 +1,25 @@
-define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
-    function( Fish, Messages, Util, IO){
+define( ["app/fishtank", "app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
+    function( FishTank, Fish, Messages, Util, IO){
         'use strict';
         var
             self = this,
             commandQueue = [],
-            fishtank = null,
             socket = null,
             newFishCount = 0,
             publicContract = null,
 
-            processCommands = function(){
+            processNextCommand = function(){
                 setTimeout( function(){
                     if( commandQueue.length > 0 ){
                         var command = commandQueue.shift();
                         command.action.call( self, command.arg );
                     }
-                    processCommands();
+                    processNextCommand();
                 }, 100 );
             },
 
             updateTankAction = function( tankDescriptor ){
-                fishtank.updateConnectedTanks( tankDescriptor );
+                FishTank.updateConnectedTanks( tankDescriptor );
             },
 
             addFishAction = function( fishDescriptor ){
@@ -31,12 +30,12 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
                         0.5,
                         Util.random( 0, 2 * Math.PI ) );
                 }
-                var fish = new Fish( publicContract, fishtank, fishDescriptor );
-                fishtank.addFish( fish );
+                var fish = new Fish( publicContract, FishTank, fishDescriptor );
+                FishTank.addFish( fish );
             },
 
             removeFishAction = function( fish ){
-                fishtank.removeFish( fish );
+                FishTank.removeFish( fish );
             },
 
             connectToServerAction = function(){
@@ -76,13 +75,6 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
 
         publicContract = {
 
-            init: function( fishTank ){
-                fishtank = fishTank;
-                processCommands();
-                // delay as a gross way of avoiding duplicated refreshes
-                commandQueue.push( {action: connectToServerAction} );
-            },
-
             addFish: function( fishDescriptor ){
                 commandQueue.push( {action: addFishAction, arg: fishDescriptor} );
             },
@@ -92,9 +84,11 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
             },
 
             teleportFish: function( fish ){
-                commandQueue.push( {action: teleportFishAction, args: fish} );
+                commandQueue.push( {action: teleportFishAction, arg: fish} );
             }
         };
 
+        processNextCommand();
+        commandQueue.push( {action: connectToServerAction} );
         return publicContract;
     } );
