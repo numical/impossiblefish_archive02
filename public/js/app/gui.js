@@ -11,5 +11,8 @@ define( {
     },
     getDebugConsole: function(){
         return document.getElementById( "debugConsole" );
+    },
+    getControlsContainer: function(){
+        return document.getElementById("controls");
     }
 } );

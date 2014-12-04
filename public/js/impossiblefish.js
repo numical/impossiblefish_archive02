@@ -6,57 +6,23 @@ require.config({
 });
 
 // wire up models to GUI
-require(["app/commands", "app/fishtank", "app/debug", "app/util"],
-                function( CommandQueue, FishTank, Debug, Util ){
+require(["app/commands", "app/fishtank", "app/controls", "app/debug"],
+                function( CommandQueue, FishTank, Controls, Debug ){
     'use strict';
     var
-        fishtank = new FishTank(),
-
-        // set up control container
-        CONTROL_OPACITY = 1.0,
-        controls = document.getElementById("controls"),
-
-        fadeIn =  function(){
-            Util.fadeIn( controls, CONTROL_OPACITY );
-        },
-
-        fadeOut =  function(){
-            Util.fadeOut( controls, CONTROL_OPACITY );
-        },
-
-        // event propagation
-        eventPropagation = function(event) {
-            switch (event.target.id) {
-                case "addFish":
-                    CommandQueue.addFish();
-                    break;
-                case "removeFish":
-                    CommandQueue.removeFish();
-                    break;
-                case "fishTank":
-                    fishtank.togglePause();
-                    break;
-            }
-        };
+        fishtank = new FishTank();
 
     // set up debugging if necessary
-    Debug.displayConsole();
+    Debug.init();
 
-    // set up dynamic sizing
-    window.addEventListener('resize', fishtank.resize, false);
-    window.addEventListener('orientationchange', fishtank.resize, false);
-    fishtank.resize();
+    // set up controls
+    Controls.init( CommandQueue );
 
-    // control visibility
-    controls.style.opacity = CONTROL_OPACITY;
-    controls.addEventListener('mouseover', fadeIn, false );
-    controls.addEventListener('mouseout',  fadeOut, false );
-
-    // wire up click event
-    window.addEventListener('click', eventPropagation, false );
+    // start fishtank animation
+    fishtank.init();
 
     // wire up command queue
-    CommandQueue.start( fishtank );
+    CommandQueue.init( fishtank );
 });
 
 

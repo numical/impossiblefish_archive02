@@ -6,7 +6,7 @@ define(["app/gui","app/util","lib/stacktrace"], function( GUI, Util, generateSta
         debugConsole = null,
 
         activeMode = {
-            displayConsole: function(){
+            init: function(){
                 GUI.getFishTankCanvas().style.height = "65vh";
                 debugConsole.style.display = "block";
                 debugConsole.addEventListener( "click", function(){
@@ -32,7 +32,7 @@ define(["app/gui","app/util","lib/stacktrace"], function( GUI, Util, generateSta
         },
 
         dummyMode = {
-            displayConsole: function(){},
+            init: function(){},
             log: function(){},
             logWithStackTrace: function(){}
         };

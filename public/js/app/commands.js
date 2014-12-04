@@ -76,7 +76,7 @@ define( ["app/fish", "app/messages", "app/util", "lib/socket.io-1.1.0"],
 
         publicContract = {
 
-            start: function( fishTank ){
+            init: function( fishTank ){
                 fishtank = fishTank;
                 processCommands();
                 // delay as a gross way of avoiding duplicated refreshes

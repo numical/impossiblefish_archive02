@@ -19,6 +19,13 @@ define( ["app/gui","app/bubble","app/debug"], function( GUI, Bubble, Debug ) {
                 }
             },
 
+            resize = function(){
+                self.height = canvas.clientHeight;
+                self.width = canvas.clientWidth;
+                canvas.height = self.height;
+                canvas.width = self.width;
+            },
+
             animate = function(){
                 fishies.forEach( function( fish ){
                     fish.animate();
@@ -41,12 +48,16 @@ define( ["app/gui","app/bubble","app/debug"], function( GUI, Bubble, Debug ) {
         this.left = null;
         this.right = null;
 
-        this.togglePause = function(){
-            if (animationRequestId) {
-                pause();
-            } else {
-                animate();
-            }
+        this.init = function() {
+            // set up dynamic sizing
+            var window = GUI.getWindow();
+            window.addEventListener('resize', resize, false);
+            window.addEventListener('orientationchange', resize, false);
+
+            // size and start animation
+            resize();
+            addBubbles();
+            animate();
         };
 
         this.updateConnectedTanks = function( tankDescriptor ) {
@@ -64,9 +75,6 @@ define( ["app/gui","app/bubble","app/debug"], function( GUI, Bubble, Debug ) {
 
         this.addFish = function( fish ){
             fishies.push( fish );
-            if ( fishies.length === 1 ) {
-                animate();
-            }
             Debug.log( "Fish '" + fish.getDescriptor().meme + "' added, total fishies = " + fishies.length );
         };
 
@@ -82,20 +90,8 @@ define( ["app/gui","app/bubble","app/debug"], function( GUI, Bubble, Debug ) {
             }
             if ( removed ) {
                 removed.hide();
-                if ( fishies.length === 0 ) {
-                    pause();
-                }
                 Debug.logWithStackTrace( "Fish '" + removed.getDescriptor().meme + "' removed, total fishies = " + fishies.length );
             }
-        };
-
-        // dynamic sizing of canvas and fish tank
-        this.resize = function(){
-            self.height = canvas.clientHeight;
-            self.width =  canvas.clientWidth;
-            canvas.height = self.height;
-            canvas.width = self.width;
-            addBubbles();
         };
     };
 });
