@@ -58,10 +58,8 @@ define( ["app/gui", "app/bubble", "app/debug"], function( GUI, Bubble, Debug ){
         addBubbles = function(){
             bubbles.splice( 0, bubbles.length );
             var numBubbles = publicContract.width / BUBBLE_DENSITY;
-                //properties = { parentTank: { value: publicContract } };
             while( --numBubbles > 0 ){
                 bubbles.push( new Bubble( publicContract ) );
-                //bubbles.push( Object.create( Bubble, properties ) );
             }
         },
 
@@ -93,8 +91,6 @@ define( ["app/gui", "app/bubble", "app/debug"], function( GUI, Bubble, Debug ){
             addBubbles();
             animate();
         };
-
-
 
     init();
     return publicContract;

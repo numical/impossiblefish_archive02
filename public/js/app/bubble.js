@@ -1,57 +1,64 @@
-define( ["app/gui","app/util"], function ( GUI, Util) {
+define( ["app/gui", "app/util"], function( GUI, Util ){
     'use strict';
 
     var MAX_BUBBLE_RADIUS = 10,
         BORDER_COLOUR = "black",
-        BUBBLE_COLOUR = "white";
-/*        MIN_SPEED = 0.3,
-        MAX_SPEED = 0.7;*/
+        BUBBLE_COLOUR = "white",
+        context = GUI.getFishTankContext(),
 
+        draw = function( bubble ){
+            context.beginPath();
+            context.arc( 0, 0, bubble.bubbleRadius, 0, Math.PI * 2, true );
+            context.strokeStyle = BORDER_COLOUR;
+            context.stroke();
+            context.fillStyle = BUBBLE_COLOUR;
+            context.fill();
+        },
 
-    return function ( parentTank ){
-        var
-            context = GUI.getFishTankContext(),
-            bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS ),
-            imageRadius = bubbleRadius + context.lineWidth,
-            xPos = Util.random( MAX_BUBBLE_RADIUS, parentTank.width - MAX_BUBBLE_RADIUS ),
-            yPos = parentTank.height,
-            speed = 0.5, // Util.random( MIN_SPEED, MAX_SPEED ),
-            delay = Util.random( 0, parentTank.height / speed ),
+        hide = function( bubble ){
+            context.clearRect(
+                -bubble.imageRadius,
+                -bubble.imageRadius + 1,
+                bubble.imageRadius * 2,
+                bubble.imageRadius * 2 );
+        },
 
-            draw = function(){
-                context.translate( xPos, yPos );
-                context.beginPath();
-                context.arc( 0, 0, bubbleRadius, 0, Math.PI * 2, true );
-                context.strokeStyle = BORDER_COLOUR;
-                context.stroke();
-                context.fillStyle = BUBBLE_COLOUR;
-                context.fill();
-                context.translate( -xPos, -yPos );
-            },
-
-            hide = function(){
-                context.translate( xPos, yPos );
-                context.clearRect( -imageRadius, -imageRadius + 1, imageRadius * 2, imageRadius * 2 );
-                context.translate( -xPos, -yPos );
-            },
-
-            recalculatePosition = function(){
-                yPos -= speed;
-                if( yPos <= -imageRadius ){
-                    yPos = parentTank.height;
-                    xPos = Util.random( MAX_BUBBLE_RADIUS, parentTank.width - MAX_BUBBLE_RADIUS );
-                }
-            };
-
-        this.animate = function(){
-            if( delay === 0 ){
-                hide();
-                draw();
-                recalculatePosition();
-            } else{
-                --delay;
+        recalculatePositionOf = function( bubble ){
+            bubble.pos.y -= bubble.speed;
+            if( bubble.pos.y <= -bubble.imageRadius ){
+                bubble.pos.y = bubble.parentTank.height;
+                bubble.pos.x = Util.random( MAX_BUBBLE_RADIUS, bubble.parentTank.width - MAX_BUBBLE_RADIUS );
             }
+        },
+
+        animate = function( bubble ){
+            if( bubble.delay === 0 ){
+                context.translate( bubble.pos.x, bubble.pos.y );
+                hide( bubble );
+                draw( bubble );
+                context.translate( -bubble.pos.x, -bubble.pos.y );
+                recalculatePositionOf( bubble );
+            } else{
+                --bubble.delay;
+            }
+        },
+
+        Bubble = function( FishTank ){
+            this.parentTank = FishTank;
+            this.bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS );
+            this.imageRadius = this.bubbleRadius + context.lineWidth;
+            this.pos = {
+                x: Util.random( MAX_BUBBLE_RADIUS, FishTank.width - MAX_BUBBLE_RADIUS ),
+                y: FishTank.height
+            };
+            this.speed = 0.5;
+            this.delay = Util.random( 0, FishTank.height / this.speed );
         };
+
+    Bubble.prototype.animate = function(){
+       animate( this );
     };
-});
+
+    return Bubble;
+} );
 
