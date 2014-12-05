@@ -1,11 +1,10 @@
-define( ["app/commands", "app/fishtank","app/gui","app/util","app/debug"], function(
-    CommandQueue, FishTank, GUI, Util, Debug ) {
+define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], function( CommandQueue, FishTank, GUI, Util, Debug ){
     'use strict';
     // constants
     var FISH_DIMENSION = 10,
         FISH_AGILITY = 10,      // max change of direction (+/-) in degrees
         FISH_TWITCHINESS = 10,  // how frequently change direction - 1 in N times
-        FISH_SPEED = 2,
+        FISH_SPEED = FishTank.width/400,  // across screen in 10 secs (assuming 50Hz)
         HEAD = {
             COLOUR: "#F9CD1B",
             ORIGIN: 0,
@@ -30,140 +29,142 @@ define( ["app/commands", "app/fishtank","app/gui","app/util","app/debug"], funct
             Y: -FISH_DIMENSION - 1,
             WIDTH: 3 * FISH_DIMENSION + 2,
             HEIGHT: 2 * FISH_DIMENSION + 2
-        };
+        },
+        context = GUI.getFishTankContext();
 
     // encapsulate the drawing logic of the fish
-    function FishImage() {
+    function FishImage( x, y, rotation ){
+        this.coords = { x: x, y: y };
+        this.rotationInRadians = rotation;
+    }
 
-        var xPos, yPos, rotationRadians, context = GUI.getFishTankContext();
+    FishImage.prototype = {
 
-        this.setPosition = function (x, y, rotation) {
-            xPos = x;
-            yPos = y;
-            rotationRadians = rotation;
-        };
-
-        this.draw = function () {
-            context.translate(xPos, yPos);
-            context.rotate(rotationRadians);
+        draw: function(){
+            context.translate( this.coords.x, this.coords.y );
+            context.rotate( this.rotationInRadians );
 
             context.fillStyle = HEAD.COLOUR;
             context.beginPath();
-            context.moveTo(TAIL.ORIGIN, TAIL.ORIGIN);
-            context.lineTo(TAIL.LENGTH, -TAIL.HEIGHT);
-            context.lineTo(TAIL.LENGTH, TAIL.HEIGHT);
-            context.lineTo(TAIL.ORIGIN, TAIL.ORIGIN);
-            context.arc(HEAD.ORIGIN, HEAD.ORIGIN, HEAD.RADIUS, HEAD.START_ANGLE, HEAD.END_ANGLE, true);
+            context.moveTo( TAIL.ORIGIN, TAIL.ORIGIN );
+            context.lineTo( TAIL.LENGTH, -TAIL.HEIGHT );
+            context.lineTo( TAIL.LENGTH, TAIL.HEIGHT );
+            context.lineTo( TAIL.ORIGIN, TAIL.ORIGIN );
+            context.arc( HEAD.ORIGIN, HEAD.ORIGIN, HEAD.RADIUS, HEAD.START_ANGLE, HEAD.END_ANGLE, true );
             context.fill();
 
             context.fillStyle = EYE.COLOUR;
             context.beginPath();
-            context.arc(EYE.ORIGIN, EYE.ORIGIN, EYE.RADIUS, EYE.START_ANGLE, EYE.END_ANGLE, true);
+            context.arc( EYE.ORIGIN, EYE.ORIGIN, EYE.RADIUS, EYE.START_ANGLE, EYE.END_ANGLE, true );
             context.fill();
 
-            context.rotate(-rotationRadians);
-            context.translate(-xPos, -yPos);
-        };
+            context.rotate(  -this.rotationInRadians );
+            context.translate( -this.coords.x, -this.coords.y );
+        },
 
-        this.hide = function () {
-            context.translate(xPos, yPos);
-            context.rotate(rotationRadians);
-            context.clearRect(BOUNDS.X, BOUNDS.Y, BOUNDS.WIDTH, BOUNDS.HEIGHT);
-            context.rotate(-rotationRadians);
-            context.translate(-xPos, -yPos);
-        };
-    }
+        hide: function(){
+            context.translate( this.coords.x, this.coords.y );
+            context.rotate( this.rotationInRadians );
+
+            context.clearRect( BOUNDS.X, BOUNDS.Y, BOUNDS.WIDTH, BOUNDS.HEIGHT );
+
+            context.rotate(  -this.rotationInRadians );
+            context.translate( -this.coords.x, -this.coords.y );
+        }
+    };
 
     // the main fish object defining behaviour
-    return function ( fishdescriptor ) {
+    function Fish( fishdescriptor ){
 
-        var self = this,
-            xPos = FishTank.width * fishdescriptor.xRelative,
-            yPos = FishTank.height * fishdescriptor.yRelative,
-            rotationInRadians = fishdescriptor.rotation,
-            hidden = false,
-            image = new FishImage(),
+        this.descriptor = fishdescriptor;
+        this.image = new FishImage(
+            FishTank.width * fishdescriptor.xRelative,
+            FishTank.height * fishdescriptor.yRelative,
+            fishdescriptor.rotation );
+        this.hidden = false;
+    }
 
-            recalculatePosition = function () {
+    Fish.prototype = {
 
-                if (Util.random(0, FISH_TWITCHINESS) < 1) {
-                    rotationInRadians += Util.random(-FISH_AGILITY, FISH_AGILITY) * Math.PI / 180;
-                }
-
-                xPos -= FISH_SPEED * Math.cos(rotationInRadians);
-                yPos -= FISH_SPEED * Math.sin(rotationInRadians);
-
-
-                if (xPos < 1) {
-                    if (FishTank.left) {
-                        self.hide();
-                        xPos = 0;
-                        CommandQueue.teleportFish(self);
-                    } else {
-                        xPos = FishTank.width - 1;
-                    }
-                } else if (xPos >= FishTank.width) {
-                    if (FishTank.right) {
-                        self.hide();
-                        xPos = FishTank.width;
-                        CommandQueue.teleportFish(self);
-                    } else {
-                        xPos = 0;
-                    }
-                } else if (yPos < 1) {
-                    if (FishTank.top) {
-                        self.hide();
-                        yPos = 0;
-                        CommandQueue.teleportFish(self);
-                    } else {
-                        yPos = FishTank.height - 1;
-                    }
-                } else if (yPos >= FishTank.height) {
-                    if (FishTank.bottom) {
-                        self.hide();
-                        yPos = FishTank.height;
-                        CommandQueue.teleportFish(self);
-                    } else {
-                        yPos = 1;
-                    }
-
-                }
-            };
-
-
-        this.animate = function () {
-            if (!hidden) {
-                image.hide();
-                image.setPosition(xPos, yPos, rotationInRadians);
-                image.draw();
-                recalculatePosition();
+        recalculatePosition: function(){
+            var coords = this.image.coords;
+            if( Util.random( 0, FISH_TWITCHINESS ) < 1 ){
+                this.image.rotationInRadians += Util.random( -FISH_AGILITY, FISH_AGILITY ) * Math.PI / 180;
             }
-        };
 
-        this.hide = function () {
-            if ( !hidden ) {
-                hidden = true;
-                image.hide();
-                if ( Debug ) {
-                    Debug.logWithStackTrace( "Fish '" + fishdescriptor.meme + "' hidden" );
+            coords.x -= Math.round(FISH_SPEED * Math.cos( this.image.rotationInRadians ));
+            coords.y -= Math.floor(FISH_SPEED * Math.sin( this.image.rotationInRadians ));
+
+            if( coords.x < 1 ){
+                if( FishTank.left ){
+                    this.hide();
+                    coords.x = 0;
+                    CommandQueue.teleportFish( this );
+                } else{
+                    coords.x = FishTank.width - 1;
+                }
+            } else if( coords.x >= FishTank.width ){
+                if( FishTank.right ){
+                    this.hide();
+                    coords.x = FishTank.width;
+                    CommandQueue.teleportFish( this );
+                } else{
+                    coords.x = 0;
+                }
+            } else if( coords.y < 1 ){
+                if( FishTank.top ){
+                    this.hide();
+                    coords.y = 0;
+                    CommandQueue.teleportFish( this );
+                } else{
+                    coords.y = FishTank.height - 1;
+                }
+            } else if( coords.y >= FishTank.height ){
+                if( FishTank.bottom ){
+                    this.hide();
+                    coords.y = FishTank.height;
+                    CommandQueue.teleportFish( this );
+                } else{
+                    coords.y = 1;
+                }
+
+            }
+        },
+
+        animate: function(){
+            if( !this.hidden ){
+                this.image.hide();
+                this.recalculatePosition();
+                this.image.draw();
+            }
+        },
+
+        hide: function(){
+            if( !this.hidden ){
+                this.hidden = true;
+                this.image.hide();
+                if( Debug ){
+                    Debug.logWithStackTrace( "Fish '" + this.descriptor.meme + "' hidden" );
                 }
             }
-        };
+        },
 
-        this.show = function() {
-            hidden = false;
-        };
+        show: function(){
+            this.hidden = false;
+        },
 
-        this.getDescriptor = function(){
-            fishdescriptor.xRelative =  xPos/FishTank.width;
-            fishdescriptor.yRelative = yPos/FishTank.height;
-            fishdescriptor.rotation = rotationInRadians;
-            return fishdescriptor;
-        };
-
-        image.setPosition( xPos, yPos, rotationInRadians);
+        getDescriptor: function(){
+            var descriptor = this.descriptor,
+                coords = this.image.coords;
+            descriptor.xRelative = coords.x / FishTank.width;
+            descriptor.yRelative = coords.y / FishTank.height;
+            descriptor.rotation = this.image.rotationInRadians;
+            return descriptor;
+        }
     };
-});
+
+    return Fish;
+} );
 
 
 

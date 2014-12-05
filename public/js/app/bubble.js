@@ -24,19 +24,19 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
         },
 
         recalculatePositionOf = function( bubble ){
-            bubble.pos.y -= bubble.speed;
-            if( bubble.pos.y <= -bubble.imageRadius ){
-                bubble.pos.y = bubble.parentTank.height;
-                bubble.pos.x = Util.random( MAX_BUBBLE_RADIUS, bubble.parentTank.width - MAX_BUBBLE_RADIUS );
+            bubble.coords.y -= bubble.speed;
+            if( bubble.coords.y <= -bubble.imageRadius ){
+                bubble.coords.y = bubble.parentTank.height;
+                bubble.coords.x = Util.random( MAX_BUBBLE_RADIUS, bubble.parentTank.width - MAX_BUBBLE_RADIUS );
             }
         },
 
         animate = function( bubble ){
             if( bubble.delay === 0 ){
-                context.translate( bubble.pos.x, bubble.pos.y );
+                context.translate( bubble.coords.x, bubble.coords.y );
                 hide( bubble );
                 draw( bubble );
-                context.translate( -bubble.pos.x, -bubble.pos.y );
+                context.translate( -bubble.coords.x, -bubble.coords.y );
                 recalculatePositionOf( bubble );
             } else{
                 --bubble.delay;
@@ -47,7 +47,7 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
             this.parentTank = FishTank;
             this.bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS );
             this.imageRadius = this.bubbleRadius + context.lineWidth;
-            this.pos = {
+            this.coords = {
                 x: Util.random( MAX_BUBBLE_RADIUS, FishTank.width - MAX_BUBBLE_RADIUS ),
                 y: FishTank.height
             };
