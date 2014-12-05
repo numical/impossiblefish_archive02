@@ -6,6 +6,10 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
         BUBBLE_COLOUR = "white",
         context = GUI.getFishTankContext(),
 
+        calculateRandomX = function( tankWidth ) {
+            return Math.floor(  Util.random( MAX_BUBBLE_RADIUS, tankWidth - MAX_BUBBLE_RADIUS ) );
+        },
+
         draw = function( bubble ){
             context.beginPath();
             context.arc( 0, 0, bubble.bubbleRadius, 0, Math.PI * 2, true );
@@ -18,7 +22,7 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
         hide = function( bubble ){
             context.clearRect(
                 -bubble.imageRadius,
-                -bubble.imageRadius + 1,
+                -bubble.imageRadius + bubble.speed,
                 bubble.imageRadius * 2,
                 bubble.imageRadius * 2 );
         },
@@ -27,7 +31,7 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
             bubble.coords.y -= bubble.speed;
             if( bubble.coords.y <= -bubble.imageRadius ){
                 bubble.coords.y = bubble.parentTank.height;
-                bubble.coords.x = Util.random( MAX_BUBBLE_RADIUS, bubble.parentTank.width - MAX_BUBBLE_RADIUS );
+                bubble.coords.x = calculateRandomX( bubble.parentTank.width );
             }
         },
 
@@ -48,10 +52,10 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
             this.bubbleRadius = Util.random( 2, MAX_BUBBLE_RADIUS );
             this.imageRadius = this.bubbleRadius + context.lineWidth;
             this.coords = {
-                x: Util.random( MAX_BUBBLE_RADIUS, FishTank.width - MAX_BUBBLE_RADIUS ),
+                x: calculateRandomX ( FishTank.width - MAX_BUBBLE_RADIUS ),
                 y: FishTank.height
             };
-            this.speed = 0.5;
+            this.speed =  Math.ceil( FishTank.height / 1000 ); // up tank in 20 secs (assuming 50Hz)
             this.delay = Util.random( 0, FishTank.height / this.speed );
         };
 

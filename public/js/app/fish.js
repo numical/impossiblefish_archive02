@@ -92,7 +92,7 @@ define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], fu
                 this.image.rotationInRadians += Util.random( -FISH_AGILITY, FISH_AGILITY ) * Math.PI / 180;
             }
 
-            coords.x -= Math.round(FISH_SPEED * Math.cos( this.image.rotationInRadians ));
+            coords.x -= Math.floor(FISH_SPEED * Math.cos( this.image.rotationInRadians ));
             coords.y -= Math.floor(FISH_SPEED * Math.sin( this.image.rotationInRadians ));
 
             if( coords.x < 1 ){
