@@ -29,7 +29,7 @@ define( ["app/gui", "app/util"], function( GUI, Util ){
 
         recalculatePositionOf = function( bubble ){
             bubble.coords.y -= bubble.speed;
-            if( bubble.coords.y <= -bubble.imageRadius ){
+            if( bubble.coords.y < -bubble.imageRadius ){
                 bubble.coords.y = bubble.parentTank.height;
                 bubble.coords.x = calculateRandomX( bubble.parentTank.width );
             }

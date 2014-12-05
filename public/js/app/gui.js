@@ -14,5 +14,8 @@ define( {
     },
     getControlsContainer: function(){
         return document.getElementById("controls");
+    },
+    getLocationDisplay: function(){
+        return document.getElementById("location");
     }
 } );

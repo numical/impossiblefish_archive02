@@ -6,8 +6,8 @@ require.config({
 });
 
 // wire up models to GUI
-require(["app/commands", "app/fishtank", "app/controls", "app/debug"],
-                function( CommandQueue, FishTank, Controls, Debug ){
+require(["app/commands", "app/fishtank", "app/controls", "app/location","app/debug"],
+                function( CommandQueue, FishTank, Controls, Location, Debug ){
     'use strict';
 });
 
