@@ -1,10 +1,10 @@
-define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], function( CommandQueue, FishTank, GUI, Util, Debug ){
+define( ["app/commands", "app/gui", "app/util", "app/debug"],
+        function( CommandQueue, GUI, Util, Debug ){
     'use strict';
     // constants
     var FISH_DIMENSION = 10,
         FISH_AGILITY = 10,      // max change of direction (+/-) in degrees
         FISH_TWITCHINESS = 10,  // how frequently change direction - 1 in N times
-        FISH_SPEED = FishTank.width/400,  // across screen in 10 secs (assuming 50Hz)
         HEAD = {
             COLOUR: "#F9CD1B",
             ORIGIN: 0,
@@ -41,6 +41,7 @@ define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], fu
     FishImage.prototype = {
 
         draw: function(){
+            context.save();
             context.translate( this.coords.x, this.coords.y );
             context.rotate( this.rotationInRadians );
 
@@ -58,84 +59,88 @@ define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], fu
             context.arc( EYE.ORIGIN, EYE.ORIGIN, EYE.RADIUS, EYE.START_ANGLE, EYE.END_ANGLE, true );
             context.fill();
 
-            context.rotate(  -this.rotationInRadians );
-            context.translate( -this.coords.x, -this.coords.y );
+            context.restore();
         },
 
         hide: function(){
+            context.save();
             context.translate( this.coords.x, this.coords.y );
             context.rotate( this.rotationInRadians );
 
             context.clearRect( BOUNDS.X, BOUNDS.Y, BOUNDS.WIDTH, BOUNDS.HEIGHT );
 
-            context.rotate(  -this.rotationInRadians );
-            context.translate( -this.coords.x, -this.coords.y );
+            context.restore();
         }
     };
 
     // the main fish object defining behaviour
-    function Fish( fishdescriptor ){
+    function Fish( fishdescriptor, fishtank ){
 
         this.descriptor = fishdescriptor;
+        this.parent = fishtank;
         this.image = new FishImage(
-            FishTank.width * fishdescriptor.xRelative,
-            FishTank.height * fishdescriptor.yRelative,
+            fishtank.width * fishdescriptor.xRelative,
+            fishtank.height * fishdescriptor.yRelative,
             fishdescriptor.rotation );
+        this.speed = fishtank.width/400;  // across screen in 10 secs (assuming 50Hz)
         this.hidden = false;
     }
 
     Fish.prototype = {
 
-        recalculatePosition: function(){
-            var coords = this.image.coords;
+        moveOrTeleport: function(){
+            var coords = this.image.coords,
+                tank = this.parent,
+                teleport = false;
             if( Util.random( 0, FISH_TWITCHINESS ) < 1 ){
                 this.image.rotationInRadians += Util.random( -FISH_AGILITY, FISH_AGILITY ) * Math.PI / 180;
             }
 
-            coords.x -= Math.floor(FISH_SPEED * Math.cos( this.image.rotationInRadians ));
-            coords.y -= Math.floor(FISH_SPEED * Math.sin( this.image.rotationInRadians ));
+            coords.x -= Math.floor( this.speed * Math.cos( this.image.rotationInRadians ));
+            coords.y -= Math.floor( this.speed * Math.sin( this.image.rotationInRadians ));
 
             if( coords.x < 1 ){
-                if( FishTank.left ){
-                    this.hide();
+                if( tank.left ){
                     coords.x = 0;
-                    CommandQueue.teleportFish( this );
+                    teleport = true;
                 } else{
-                    coords.x = FishTank.width - 1;
+                    coords.x = tank.width - 1;
                 }
-            } else if( coords.x >= FishTank.width ){
-                if( FishTank.right ){
-                    this.hide();
-                    coords.x = FishTank.width;
-                    CommandQueue.teleportFish( this );
+            } else if( coords.x >= tank.width ){
+                if( tank.right ){
+                    coords.x = tank.width;
+                    teleport = true;
                 } else{
                     coords.x = 0;
                 }
             } else if( coords.y < 1 ){
-                if( FishTank.top ){
-                    this.hide();
+                if( tank.top ){
                     coords.y = 0;
-                    CommandQueue.teleportFish( this );
+                    teleport = true;
                 } else{
-                    coords.y = FishTank.height - 1;
+                    coords.y = tank.height - 1;
                 }
-            } else if( coords.y >= FishTank.height ){
-                if( FishTank.bottom ){
-                    this.hide();
-                    coords.y = FishTank.height;
-                    CommandQueue.teleportFish( this );
+            } else if( coords.y >= tank.height ){
+                if( tank.bottom ){
+                    coords.y = tank.height;
+                    teleport = true;
                 } else{
                     coords.y = 1;
                 }
-
             }
+
+            if ( teleport ) {
+                CommandQueue.teleportFish( this );
+            }
+            return !teleport;
         },
 
         animate: function(){
             if( !this.hidden ){
                 this.image.hide();
-                this.recalculatePosition();
-                this.image.draw();
+                if ( this.moveOrTeleport() ) {
+                    this.image.draw();
+                }
             }
         },
 
@@ -155,9 +160,10 @@ define( ["app/commands", "app/fishtank", "app/gui", "app/util", "app/debug"], fu
 
         getDescriptor: function(){
             var descriptor = this.descriptor,
-                coords = this.image.coords;
-            descriptor.xRelative = coords.x / FishTank.width;
-            descriptor.yRelative = coords.y / FishTank.height;
+                coords = this.image.coords,
+                tank = this.parent;
+            descriptor.xRelative = coords.x / tank.width;
+            descriptor.yRelative = coords.y / tank.height;
             descriptor.rotation = this.image.rotationInRadians;
             return descriptor;
         }

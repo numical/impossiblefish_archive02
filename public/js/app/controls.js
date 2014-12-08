@@ -1,11 +1,27 @@
-define( ["app/commands", "app/gui", "app/util"], function( CommandQueue, GUI, Util ){
+define( ["app/commands", "app/messages", "app/gui", "app/util"],
+            function( CommandQueue, Messages, GUI, Util ){
     'use strict';
 
     var CONTROL_OPACITY = 1.0,
-        init = function(){
-            var container = GUI.getControlsContainer(),
-                window = GUI.getWindow();
 
+        container = GUI.getControlsContainer(),
+        window = GUI.getWindow(),
+        addedFishes = 0,
+
+        addFish = function(){
+            var fishDescriptor = new Messages.FishDescriptor(
+                ++addedFishes,
+                0.5,
+                0.5,
+                Util.random( 0, 2 * Math.PI ) );
+            CommandQueue.addFish( fishDescriptor );
+        },
+
+        removeFish = function() {
+            CommandQueue.removeFish();
+        },
+
+        init = function(){
             // control visibility
             container.style.opacity = CONTROL_OPACITY;
             container.addEventListener(
@@ -27,10 +43,10 @@ define( ["app/commands", "app/gui", "app/util"], function( CommandQueue, GUI, Ut
                 function( event ){
                     switch( event.target.id ){
                         case "addFish":
-                            CommandQueue.addFish();
+                            addFish();
                             break;
                         case "removeFish":
-                            CommandQueue.removeFish();
+                            removeFish();
                             break;
                     }
                 },

@@ -1,4 +1,5 @@
-define( ["app/gui", "app/bubble", "app/debug"], function( GUI, Bubble, Debug ){
+define( [ "app/fish",  "app/bubble", "app/gui",  "app/debug"],
+            function( Fish, Bubble, GUI, Debug ){
     'use strict';
     var CONNECTED_BORDER = "dashed ",
         DISCONNECTED_BORDER = "solid ",
@@ -29,7 +30,8 @@ define( ["app/gui", "app/bubble", "app/debug"], function( GUI, Bubble, Debug ){
                 canvas.style.borderStyle = style;
             },
 
-            addFish: function( fish ){
+            addFish: function( fishDescriptor ){
+                var fish = new Fish( fishDescriptor, publicContract );
                 fishies.push( fish );
                 if ( Debug ){
                     Debug.log( "Fish '" + fish.getDescriptor().meme + "' added, total fishies = " + fishies.length );
