@@ -14,6 +14,7 @@ new function(){
         requirejs = require( 'requirejs'),
         rootDir = __dirname,
         liveFishTanks = null,
+        geocoder = null,
 
         configureAccessToCommonBrowserCode = function() {
             requirejs.config({
@@ -53,6 +54,10 @@ new function(){
             liveFishTanks = require( './app_modules/livefishtanks' )( Messages );
         },
 
+        setupGeocoding = function( Messages ) {
+            geocoder = require( './app_modules/geocoding' )( Messages );
+        },
+
         setupSocketsServer = function( Messages ){
             socketsServer.on( 'connection', function( socket ){
                 console.log('%s: Client socket connected: %s', Date(Date.now()), socket.id );
@@ -80,6 +85,7 @@ new function(){
     setupExpressServer();
     requirejs(["app/messages"],function( Messages ){
         setupFishTanks( Messages );
+        setupGeocoding( Messages );
         setupSocketsServer( Messages );
         start();
     } );
